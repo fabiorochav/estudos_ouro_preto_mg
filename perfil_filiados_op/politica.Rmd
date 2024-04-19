@@ -1,0 +1,178 @@
+---
+title: "Perfil dos filiados em Ouro Preto - TSE"
+author: "Fábio Rocha - Filósofo (UFOP) e graduando em economia (UFOP) "
+abstract: "Este breve relatório traz informações sobre o perfil dos filiados no municipio de Ouro Preto. Ao mesmo tempo traz um breve recorte sobre o perfil dos filiados no PCdoB neste mesmo municipio. A fonte dos dados é do Tribunal Superior Eleitoral referente a 2020"
+output: pdf_document
+---
+
+# Biblioteca
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+library(tidyverse)
+```
+
+# Carregamento dos dados 
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+tse <- read.csv("C:/Users/Usuario/Desktop/TSE/perfil_filiacao_partidaria.csv", sep = ';', header = T)
+
+```
+
+# Seleção de variáveis 
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+perfil <- tse %>%
+  select(`SG_PARTIDO`,`SG_UF`,`NM_MUNICIPIO`,`DS_GENERO`,
+         `DS_FAIXA_ETARIA`,`DS_ESTADO_CIVIL`,`DS_GRAU_INSTRUCAO`,`QT_FILIADO`) %>%
+  filter(NM_MUNICIPIO == "OURO PRETO")
+  #filter(SG_PARTIDO != "UP") %>%
+  #filter(SG_PARTIDO != "PROS") %>%
+  #filter(SG_PARTIDO != "PMB")
+  
+```
+
+# Visualização dos dados
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+ggplot(perfil, aes(x=SG_PARTIDO, y=QT_FILIADO))+
+  geom_col(fill="purple")+
+  #facet_wrap(~ SG_PARTIDO)+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=1))+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='',
+       title="Quantidade de filiados por partido em Ouro Preto (2020)",
+       subtitle = 'Fonte: TSE',
+       caption='Elaboração: Fábio Rocha')
+
+```
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+ggplot(perfil, aes(x=SG_PARTIDO, y=QT_FILIADO))+
+  geom_col(aes(fill=DS_GRAU_INSTRUCAO))+
+  #facet_wrap(~ )+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=1))+
+  theme(legend.position = "right",
+        legend.key.size = unit(0.1, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='',
+       title="Perfi dos filiados em Ouro Preto por grau de instruçao (2020)",
+       subtitle = 'Fonte: TSE',
+       caption='Elaboração: Fábio Rocha')
+```
+
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+ggplot(perfil, aes(x=SG_PARTIDO, y=QT_FILIADO))+
+  geom_col(aes(fill=DS_GENERO))+
+  #facet_wrap(~ )+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=1))+
+  theme(legend.position = "right",
+        legend.key.size = unit(0.1, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='',
+       title="Perfi dos filiados em Ouro Preto por gênero",
+       subtitle = 'Fonte: TSE',
+       caption='Elaboração: Fábio Rocha')
+```
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+ggplot(perfil, aes(x=SG_PARTIDO, y=QT_FILIADO))+
+  geom_col(aes(fill=DS_ESTADO_CIVIL))+
+  #facet_wrap(~ )+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=1))+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.1, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='',
+       title="Perfi dos filiados em Ouro Preto por estado civil (2020)",
+       subtitle = 'Fonte: TSE',
+       caption='Elaboração: Fábio Rocha')
+```
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+ggplot(perfil, aes(x=SG_PARTIDO, y=QT_FILIADO))+
+  geom_col(aes(fill=DS_FAIXA_ETARIA))+
+  #facet_wrap(~ )+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=1))+
+  theme(legend.position = "right",
+        legend.key.size = unit(0.1, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='',
+       title="Perfi dos filiados em Ouro Preto por faixa etária (2020)",
+       subtitle = 'Fonte: TSE',
+       caption='Elaboração: Fábio Rocha')
+```
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+ggplot(perfil, aes(x=DS_FAIXA_ETARIA, y=QT_FILIADO))+
+  geom_col()+
+  facet_wrap(~ DS_GENERO)+
+  theme(axis.text.x=element_text(angle=90, hjust=1, vjust=1))+
+  theme(legend.position = "right",
+        legend.key.size = unit(0.1, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='',
+       title="Perfi dos filiados em Ouro Preto por faixa etária e sexo (2020)",
+       subtitle = 'Fonte: TSE',
+       caption='Elaboração: Fábio Rocha')
+```
+
+# Perfil dos filiados no PCdoB
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+perfil2 <- tse %>%
+  select(`SG_PARTIDO`,`SG_UF`,`NM_MUNICIPIO`,`DS_GENERO`,
+         `DS_FAIXA_ETARIA`,`DS_ESTADO_CIVIL`,`DS_GRAU_INSTRUCAO`,`QT_FILIADO`) %>%
+  filter(NM_MUNICIPIO == "OURO PRETO") %>%
+  filter(SG_PARTIDO == "PCDOB")
+
+```
+
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+ggplot(perfil2, aes(x=DS_GRAU_INSTRUCAO, y=QT_FILIADO))+
+  geom_col(aes(fill=DS_GENERO))+
+  #facet_wrap(~ DS_ESTADO_CIVIL)+
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  theme(#legend.position = "null",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='',
+       title="Perfil dos filiados do PCdoB por sexo e grau de instrução (2020)",
+       subtitle = 'Fonte: TSE',
+       caption='Elaboração: Fábio Rocha')
+```
+
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+ggplot(perfil2, aes(x=DS_ESTADO_CIVIL, y=QT_FILIADO))+
+  geom_col(fill="brown")+
+  #facet_wrap(~ DS_GRAU_INSTRUCAO)+
+  #theme(axis.text.x=element_text(angle=65, hjust=1, vjust=1))+
+  theme(#legend.position = "null",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='',
+       title="Perfil dos filiados no PCdoB Ouro Preto por estado civíl",
+       subtitle = 'Fonte: TSE',
+       caption='Elaboração: Fábio Rocha')
+
+```
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+ggplot(perfil2, aes(x=DS_FAIXA_ETARIA, y=QT_FILIADO))+
+  geom_col()+
+  facet_wrap(~ DS_GENERO)+
+  theme(axis.text.x=element_text(angle=65, hjust=1, vjust=1))+
+  theme(#legend.position = "null",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='',
+       title="Perfil dos filiados no PCdoB Ouro Preto por genero e faixa etária",
+       subtitle = 'Fonte: TSE',
+       caption='Elaboração: Fábio Rocha')
+
+```
+  
