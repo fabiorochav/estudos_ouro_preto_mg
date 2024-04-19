@@ -1,0 +1,75 @@
+---
+title: "Mercado de trabalho de Ouro Preto e municípios selecionados"
+date: "`r format(Sys.time(), '%d de %B, %Y')`"
+subtitle: '**Secretaria de Desenvolvimento Econômico, Inovação e Tecnologia**'
+output:
+  pdf_document:
+    includes:
+      in_header: header.tex
+  word_document: default
+fontsize: 11pt
+---
+**Diretoria de Estudos Econômicos |** Fábio Rocha ^[Graduado em Filosofia pela UFOP; Graduando em Ciências Econômicas pela UFOP; atua na Diretoria de Estudos Econômicos da Secretaria Municipal de Desenvolvimento Econômico, Inovação e Tecnologia da Prefeitura Municipal de Ouro Preto.] **Revisão Textual |** Nathalia Souza Silva ^[Jornalista pela UFOP, atua na Diretoria de Comunicação na Secretaria de Desenvolvimento Econômico, Inovação e Tecnologia de Ouro Preto.] **Revisão Técnica |** Francisco Horácio ^[Prof.Dr. de Economia na Universidade Federal de Ouro Preto. Atua nas áreas Macroeconomia, Desenvolvimento Econômico e Regional com ênfase na formulação de políticas públicas para Ciência, Tecnologia e Inovação. Atua também em projetos para a promoção de Parques Tecnológicos e da cultura de inovação em instituições de ensino superior.] **Revisão Técnica |** Pedro Ivo ^[Engenheiro, graduando em Ciências Econômicas e pós-graduando em Gestão e Análise de Dados, atua em projetos de captação de recursos e incentivos fiscais à inovação tecnológica com foco na análise fiscal dos benefícios.]
+
+## Resumo
+
+Este relatório vem com o propósito de apresentar dados sobre o mercado de trabalho em Ouro Preto e municípios selecionados. Os dados utilizados são do CAGED e RAIS, disponibilizados pelo Ministério do Trabalho (PDET-Programa de Disseminação de Estatísticas do Trabalho). Os municípios selecionados neste relatório servem única e exclusivamente como mecanismo de comparação, haja vista as semelhantes características dessas economias e cidades.
+
+## Introdução
+
+É a primeira vez que o município de Ouro Preto traz a público estatísticas sobre o mercado de trabalho em seus mais variados temas. Este relatório pretende fazer isso: apresentar estes principais dados sobre o mercado de trabalho de forma a subsidiar o debate público informado e assim nortear o processo decisório. Assim, por um lado, apresentaremos dados sobre o fluxo, isto é, saldo de contratações e demissões. Por outro, o estoque: dados relacionados à quantidade de pessoas ativamente registradas em regime CLT ou estatutário. Para tanto, este relatório está dividido em oito partes.
+Na primeira parte são apresentadas as definições gerais do que vem a ser o CAGED e a RAIS - nosso insumo básico para elaboração deste relatório.
+
+Na segunda parte apresentamos o estoque de trabalho de Ouro Preto e municípios selecionados de janeiro de 2020 a maio de 2022.
+
+Na terceira parte, apresentamos o saldo, isto é, a diferença entre o número de contratados e demitidos no período de janeiro de 2020 a maio de 2022. Ainda na terceira parte, damos destaque ao saldo de contratações e demissões neste mesmo período para Ouro Preto e municípios selecionados. Ao final dessa parte apresentamos o estoque e saldo de Ouro Preto numa tabela, onde é possível verificar a evolução do estoque entre abril e maio.
+
+Na quarta parte, voltamos ao estoque de trabalho, mas desta vez com os dados da RAIS para os anos de 2005 a 2020. Nesta seção, o estoque de trabalho é desagregado pelas seções CNAE (Classificação Nacional de Atividades Econômicas). Assim, é possível verificar o quanto cada atividade econômica emprega e como ela evoluiu ao longo do tempo. Nesta parte, nosso foco se volta apenas para o município de Ouro Preto, e dessa vez, nosso estoque de trabalho considera os vínculos celetistas e estatutários (serviço público).
+
+Na quinta seção é onde fragmentamos o estoque de trabalho e o saldo do CAGED, isto é, mostramos o saldo de contratações e demissões por seção CNAE 2.0 e escolaridade.
+
+Na sexta parte apresentamos os rendimentos médios por grau de escolaridade e sexo, bem como grau de escolaridade e raça/cor.
+
+Na sétima, mostramos os rendimentos por quantis entre o ano de 2020 a abril de 2022. Isto é, em que proporção os rendimentos (salários pagos) foram distribuídos entre os contratos de admissão e demissão.
+Na oitava e última parte, apresentamos, com dados do CAGED (portanto fluxo), os dados de inserção do jovem no mercado de trabalho. Mais especificamente, o jovem aprendiz.
+
+Por fim, são apresentadas algumas considerações finais.
+
+## 1. CAGED e RAIS
+
+## CAGED
+
+O Cadastro Geral de Empregados e Desempregados (CAGED) foi criado como registro permanente de admissões e dispensa de empregados, sob o regime da Consolidação das Leis do Trabalho (CLT). É utilizado pelo Programa de Seguro-Desemprego, para conferir os dados referentes aos vínculos trabalhistas, além de outros programas sociais. Este Cadastro serve, ainda, como base para a elaboração de estudos, pesquisas, projetos e programas ligados ao mercado de trabalho, ao mesmo tempo em que subsidia a tomada de decisões para ações governamentais. (Governo Federal , 2022)
+
+## RAIS
+
+A RAIS, instituída pelo Decreto nº 76.900, de 23/12/75, tem por objetivo:
+
+- O suprimento às necessidades de controle da atividade trabalhista no País;
+- O provimento de dados para a elaboração de estatísticas do trabalho;
+- A disponibilização de informações do mercado de trabalho às entidades governamentais;
+- Os dados coletados pela RAIS constituem expressivos insumos para atendimento das necessidades:
+
+>> Da legislação da nacionalização do trabalho;
+>> De controle dos registros do FGTS;
+>> Dos Sistemas de Arrecadação e de Concessão e Benefícios Previdenciários;
+>> De estudos técnicos de natureza estatística e atuarial;
+>> De identificação do trabalhador com direito ao abono salarial PIS/PASEP.
+
+
+```{r child = 'P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/2022/Estudos Econômicos/Codigos2_R/Mercado de Trabalho/caged_relatorio.Rmd'}
+
+```
+
+```{r child = 'P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/2022/Estudos Econômicos/Codigos2_R/Mercado de Trabalho/estoque_de_trabalho.Rmd'}
+```
+
+```{r child = 'P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/2022/Estudos Econômicos/Codigos2_R/Mercado de Trabalho/rendimento.Rmd'}
+```
+
+## Referências
+
+- https://www.gov.br/trabalho-e-previdencia/pt-br/servicos/empregador/caged
+- http://pdet.mte.gov.br/novo-caged
+- http://www.rais.gov.br/sitio/sobre.jsf
+- https://www.ipea.gov.br/extrator/simt.html

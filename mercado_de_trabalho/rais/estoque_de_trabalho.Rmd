@@ -1,0 +1,678 @@
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+library(readr)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(readxl)
+library(gt)
+library(glue)
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_de_trabalho <- read_excel("estoque_de_trabalho.xlsx", 
+    col_types = c("numeric", 
+                  "text", 
+                  "numeric", 
+        "numeric", "numeric", "numeric", 
+        "text", "text", "numeric", "numeric", 
+        "numeric", "numeric", "numeric", 
+        "numeric", "numeric", "text", "text", 
+        "text", "text", "text", "numeric", 
+        "text", "text", "text", 
+        "numeric", "text"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_de_trabalho <- read.csv("estoque_de_trabalho.csv")
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec <- estoque_de_trabalho %>%
+  select(ano,
+         quantidade_vinculos_ativos,
+         quantidade_vinculos_clt,
+         quantidade_vinculos_estatutarios,
+         natureza,
+         natureza_juridica,
+         tamanho,
+         cnae_2,
+         cnae_2_subclasse,
+         subsetor_ibge,
+         )
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec <- estoque_selec %>%
+  mutate(div_cnae_2 = str_sub(cnae_2,0,2))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "1.0"] <- "Extrativa mineral"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "2.0"] <- "Indústria de produtos minerais nao metálicos"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "3.0"] <- "Indústria metalúrgica"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "4.0"] <- "Indústria mecânica"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "5.0"] <- "Indústria do material elétrico e de comunicaçoes"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "6.0"] <- "Indústria do material de transporte"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "7.0"] <- "Indústria da madeira e do mobiliário"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "8.0"] <- "Indústria do papel, papelao, editorial e gráfica"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "9.0"] <- "Ind. da borracha, fumo, couros, peles, similares, ind. diversas"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "10.0"] <- "Ind. química de produtos farmacêuticos, veterinários, perfumaria"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "11.0"] <- "Indústria têxtil do vestuário e artefatos de tecidos"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "12.0"] <- "Indústria de calçados"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "13.0"] <- "Indústria de produtos alimentícios, bebidas e álcool etílico"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "14.0"] <- "Serviços industriais de utilidade pública"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "15.0"] <- "Construçao civil"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "16.0"] <- "Comércio varejista"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "17.0"] <- "Comércio atacadista"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "18.0"] <- "Instituiçoes de crédito, seguros e capitalizaçao"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "19.0"] <- "Com. e administraçao de imóveis, valores mobiliários, serv. Técnico"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "20.0"] <- "Transportes e comunicaçoes"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "21.0"] <- "Serv. de alojamento, alimentaçao, reparaçao, manutençao, redaçao"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "22.0"] <- "Serviços médicos, odontológicos e veterinários"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "23.0"] <- "Ensino"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "24.0"] <- "Administraçao pública direta e autárquica"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "25.0"] <- "Agricultura, silvicultura, criaçao de animais, extrativismo vegetal"
+
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "EXTR MINERAL"] <- "Extrativa mineral"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "MIN NAO MET"] <- "Indústria de produtos minerais nao metálicos"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "IND METALURG"] <- "Indústria metalúrgica"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "IND MECANICA"] <- "Indústria mecânica"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "ELET E COMUN"] <- "Indústria do material elétrico e de comunicaçoes"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "MAT TRANSP"] <- "Indústria do material de transporte"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "MAD E MOBIL"] <- "Indústria da madeira e do mobiliário"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "PAPEL E GRAF"] <- "Indústria do papel, papelao, editorial e gráfica"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "BOR FUM COUR"] <- "Ind. da borracha, fumo, couros, peles, similares, ind. diversas"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "IND QUIMICA"] <- "Ind. química de produtos farmacêuticos, veterinários, perfumaria"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "IND TEXTIL"] <- "Indústria têxtil do vestuário e artefatos de tecidos"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "IND CALCADOS"] <- "Indústria de calçados"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "ALIM E BEB"] <- "Indústria de produtos alimentícios, bebidas e álcool etílico"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "SER UTIL PUB"] <- "Serviços industriais de utilidade pública"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "CONSTR CIVIL"] <- "Construçao civil"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "COM VAREJ"] <- "Comércio varejista"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "COM ATACAD"] <- "Comércio atacadista"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "INST FINANC"] <- "Instituiçoes de crédito, seguros e capitalizaçao"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "ADM TEC PROF"] <- "Com. e administraçao de imóveis, valores mobiliários, serv. Técnico"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "TRAN E COMUN"] <- "Transportes e comunicaçoes"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "ALOJ COMUNIC"] <- "Serv. de alojamento, alimentaçao, reparaçao, manutençao, redaçao"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "MED ODON VET"] <- "Serviços médicos, odontológicos e veterinários"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "ENSINO"] <- "Ensino"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "ADM PUBLICA"] <- "Administraçao pública direta e autárquica"
+
+estoque_selec$subsetor_ibge[estoque_selec$subsetor_ibge == "AGRICULTURA"] <- "Agricultura, silvicultura, criaçao de animais, extrativismo vegetal"
+
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "01"] <- "AGRICULTURA, PECUÁRIA E SERVIÇOS RELACIONADOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "02"] <- "PRODUÇÃO FLORESTAL"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "03"] <- "PESCA E AQÜICULTURA"
+
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "05"] <- "EXTRAÇÃO DE CARVÃO MINERAL"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "06"] <- "EXTRAÇÃO DE PETRÓLEO E GÁS NATURAL"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "07"] <- "EXTRAÇÃO DE MINERAIS METÁLICOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "08"] <- "EXTRAÇÃO DE MINERAIS NÃO-METÁLICOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "09"] <- "ATIVIDADES DE APOIO À EXTRAÇÃO DE MINERAIS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "10"] <- "FABRICAÇÃO DE PRODUTOS ALIMENTÍCIOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "11"] <- "FABRICAÇÃO DE BEBIDAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "12"] <- "FABRICAÇÃO DE PRODUTOS DO FUMO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "13"] <- "FABRICAÇÃO DE PRODUTOS TÊXTEIS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "14"] <- "CONFECÇÃO DE ARTIGOS DO VESTUÁRIO E ACESSÓRIOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "15"] <- "PREPARAÇÃO DE COUROS E FABRICAÇÃO DE ARTEFATOS DE COURO, ARTIGOS PARA VIAGEM E CALÇADOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "16"] <- "FABRICAÇÃO DE PRODUTOS DE MADEIRA"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "17"] <- "FABRICAÇÃO DE CELULOSE, PAPEL E PRODUTOS DE PAPEL"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "18"] <- "IMPRESSÃO E REPRODUÇÃO DE GRAVAÇÕES"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "19"] <- "FABRICAÇÃO DE COQUE, DE PRODUTOS DERIVADOS DO PETRÓLEO E DE BIOCOMBUSTÍVEIS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "20"] <- "FABRICAÇÃO DE PRODUTOS QUÍMICOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "21"] <- "FABRICAÇÃO DE PRODUTOS FARMOQUÍMICOS E FARMACÊUTICOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "22"] <- "FABRICAÇÃO DE PRODUTOS DE BORRACHA E DE MATERIAL PLÁSTICO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "23"] <- "FABRICAÇÃO DE PRODUTOS DE MINERAIS NÃO-METÁLICOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "24"] <- "METALURGIA"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "25"] <- "FABRICAÇÃO DE PRODUTOS DE METAL, EXCETO MÁQUINAS E EQUIPAMENTOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "26"] <- "FABRICAÇÃO DE EQUIPAMENTOS DE INFORMÁTICA, PRODUTOS ELETRÔNICOS E ÓPTICOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "27"] <- "FABRICAÇÃO DE MÁQUINAS, APARELHOS E MATERIAIS ELÉTRICOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "28"] <- "FABRICAÇÃO DE MÁQUINAS E EQUIPAMENTOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "29"] <- "FABRICAÇÃO DE VEÍCULOS AUTOMOTORES, REBOQUES E CARROCERIAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "30"] <- "FABRICAÇÃO DE OUTROS EQUIPAMENTOS DE TRANSPORTE, EXCETO VEÍCULOS AUTOMOTORES"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "31"] <- "FABRICAÇÃO DE MÓVEIS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "32"] <- "FABRICAÇÃO DE PRODUTOS DIVERSOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "33"] <- "MANUTENÇÃO, REPARAÇÃO E INSTALAÇÃO DE MÁQUINAS E EQUIPAMENTOS"
+
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "35"] <- "ELETRICIDADE, GÁS E OUTRAS UTILIDADES"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "36"] <- "CAPTAÇÃO, TRATAMENTO E DISTRIBUIÇÃO DE ÁGUA"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "37"] <- "ESGOTO E ATIVIDADES RELACIONADAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "38"] <- "COLETA, TRATAMENTO E DISPOSIÇÃO DE RESÍDUOS; RECUPERAÇÃO DE MATERIAIS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "39"] <- "DESCONTAMINAÇÃO E OUTROS SERVIÇOS DE GESTÃO DE RESÍDUOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "41"] <- "CONSTRUÇÃO DE EDIFÍCIOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "42"] <- "OBRAS DE INFRA-ESTRUTURA"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "43"] <- "SERVIÇOS ESPECIALIZADOS PARA CONSTRUÇÃO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "45"] <- "COMÉRCIO E REPARAÇÃO DE VEÍCULOS AUTOMOTORES E MOTOCICLETAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "46"] <- "COMÉRCIO POR ATACADO, EXCETO VEÍCULOS AUTOMOTORES E MOTOCICLETAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "47"] <- "COMÉRCIO VAREJISTA"
+
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "49"] <- "TRANSPORTE TERRESTRE"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "50"] <- "TRANSPORTE AQUAVIÁRIO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "51"] <- "TRANSPORTE AÉREO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "52"] <- "ARMAZENAMENTO E ATIVIDADES AUXILIARES DOS TRANSPORTES"
+
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "55"] <- "ALOJAMENTO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "53"] <- "CORREIO E OUTRAS ATIVIDADES DE ENTREGA"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "56"] <- "ALIMENTAÇÃO"
+
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "58"] <- "EDIÇÃO E EDIÇÃO INTEGRADA À IMPRESSÃO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "59"] <- "ATIVIDADES CINEMATOGRÁFICAS, PRODUÇÃO DE VÍDEOS E DE PROGRAMAS DE TELEVISÃO; GRAVAÇÃO DE SOM E EDIÇÃO DE MÚSICA"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "60"] <- "ATIVIDADES DE RÁDIO E DE TELEVISÃO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "61"] <- "TELECOMUNICAÇÕES"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "62"] <- "ATIVIDADES DOS SERVIÇOS DE TECNOLOGIA DA INFORMAÇÃO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "63"] <- "ATIVIDADES DE PRESTAÇÃO DE SERVIÇOS DE INFORMAÇÃO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "64"] <- "ATIVIDADES DE SERVIÇOS FINANCEIROS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "65"] <- "SEGUROS, RESSEGUROS, PREVIDÊNCIA COMPLEMENTAR E PLANOS DE SAÚDE"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "66"] <- "ATIVIDADES AUXILIARES DOS SERVIÇOS FINANCEIROS, SEGUROS, PREVIDÊNCIA COMPLEMENTAR E PLANOS DE SAÚDE"
+
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "68"] <- "ATIVIDADES IMOBILIÁRIAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "69"] <- "ATIVIDADES JURÍDICAS, DE CONTABILIDADE E DE AUDITORIA"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "70"] <- "ATIVIDADES DE SEDES DE EMPRESAS E DE CONSULTORIA EM GESTÃO EMPRESARIAL"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "71"] <- "SERVIÇOS DE ARQUITETURA E ENGENHARIA; TESTES E ANÁLISES TÉCNICAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "72"] <- "PESQUISA E DESENVOLVIMENTO CIENTÍFICO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "73"] <- "PUBLICIDADE E PESQUISA DE MERCADO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "74"] <- "OUTRAS ATIVIDADES PROFISSIONAIS, CIENTÍFICAS E TÉCNICAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "75"] <- "ATIVIDADES VETERINÁRIAS"
+
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "77"] <- "ALUGUÉIS NÃO-IMOBILIÁRIOS E GESTÃO DE ATIVOS INTANGÍVEIS NÃO-FINANCEIROS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "78"] <- "SELEÇÃO, AGENCIAMENTO E LOCAÇÃO DE MÃO-DE-OBRA"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "79"] <- "AGÊNCIAS DE VIAGENS, OPERADORES TURÍSTICOS E SERVIÇOS DE RESERVAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "80"] <- "ATIVIDADES DE VIGILÂNCIA, SEGURANÇA E INVESTIGAÇÃO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "81"] <- "SERVIÇOS PARA EDIFÍCIOS E ATIVIDADES PAISAGÍSTICAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "82"] <- "SERVIÇOS DE ESCRITÓRIO, DE APOIO ADMINISTRATIVO E OUTROS SERVIÇOS PRESTADOS ÀS EMPRESAS"
+
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "84"] <- "ADMINISTRAÇÃO PÚBLICA, DEFESA E SEGURIDADE SOCIAL"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "85"] <- "EDUCAÇÃO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "86"] <- "ATIVIDADES DE ATENÇÃO À SAÚDE HUMANA"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "87"] <- "ATIVIDADES DE ATENÇÃO À SAÚDE HUMANA INTEGRADAS COM ASSISTÊNCIA SOCIAL, PRESTADAS EM RESIDÊNCIAS COLETIVAS E PARTICULARES"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "88"] <- "SERVIÇOS DE ASSISTÊNCIA SOCIAL SEM ALOJAMENTO"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "89"] <- "SEÇÃO Q CNAE2.0 - SAÚDE HUMANA E SERVIÇOS SOCIAIS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "90"] <- "ATIVIDADES ARTÍSTICAS, CRIATIVAS E DE ESPETÁCULOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "91"] <- "ATIVIDADES LIGADAS AO PATRIMÔNIO CULTURAL E AMBIENTAL"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "92"] <- "ATIVIDADES DE EXPLORAÇÃO DE JOGOS DE AZAR E APOSTAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "93"] <- "ATIVIDADES ESPORTIVAS E DE RECREAÇÃO E LAZER"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "94"] <- "ATIVIDADES DE ORGANIZAÇÕES ASSOCIATIVAS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "95"] <- "REPARAÇÃO E MANUTENÇÃO DE EQUIPAMENTOS DE INFORMÁTICA E COMUNICAÇÃO E DE OBJETOS PESSOAIS E DOMÉSTICOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "96"] <- "OUTRAS ATIVIDADES DE SERVIÇOS PESSOAIS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "97"] <- "SERVIÇOS DOMÉSTICOS"
+estoque_selec$div_cnae_2[estoque_selec$div_cnae_2 == "99"] <- "ORGANISMOS INTERNACIONAIS E OUTRAS INSTITUIÇÕES EXTRATERRITORIAIS"
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec$tamanho[estoque_selec$tamanho == "1"] <- "ZERO"
+
+estoque_selec$tamanho[estoque_selec$tamanho == "2"] <- "ATÉ 4"
+
+estoque_selec$tamanho[estoque_selec$tamanho == "3"] <- "5 A 9"
+
+estoque_selec$tamanho[estoque_selec$tamanho == "4"] <- "10 A 19"
+
+estoque_selec$tamanho[estoque_selec$tamanho == "5"] <- "20 A 49"
+
+estoque_selec$tamanho[estoque_selec$tamanho == "6"] <- "50 A 99"
+
+estoque_selec$tamanho[estoque_selec$tamanho == "7"] <- "100 A 249"
+
+estoque_selec$tamanho[estoque_selec$tamanho == "8"] <- "250 A 499"
+
+estoque_selec$tamanho[estoque_selec$tamanho == "9"] <- "500 A 999"
+
+estoque_selec$tamanho[estoque_selec$tamanho == "10"] <- "1000 OU MAIS"
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=15, fig.height=35, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec <- estoque_selec %>%
+  filter(ano %in% c("2005","2006","2007","2008","2009","2010","2011","2012","2013","2014","2015","2016","2017","2018","2019","2020", "2021"))
+
+```
+
+## 4. Estoque de trabalho com dados da RAIS
+
+Na segunda parte deste trabalho, foi mostrado o estoque de trabalho com dados do CAGED, ou seja, o estoque de trabalho sob regime da CLT. Nesta parte nós mostramos o estoque de trabalho com dados da RAIS, e este, por sua vez, engloba tanto o regime CLT quanto o regime estatutário (serviço público).
+
+O gráfico a seguir resume esse quantitativo de estoque de trabalho entre 2005 a 2020.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec %>% 
+  group_by(ano) %>% 
+  summarise(quantidade_vinculos_ativos = sum(quantidade_vinculos_ativos)) %>% 
+  ggplot(aes(x = as.character(ano), y = quantidade_vinculos_ativos)) +
+  geom_col()+
+  geom_label(aes(label = quantidade_vinculos_ativos),vjust = 1)+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(x='Ano', 
+       y='Estoque',
+       title="Estoque de trabalho (RAIS)",
+       subtitle = "Ouro Preto (2005-2020)",
+       caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da RAIS')
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_est_clt <- estoque_selec %>%
+group_by(ano) %>%
+summarise(CLT = sum(quantidade_vinculos_clt))
+  
+  
+estoque_est_clt_2 <- estoque_selec %>%
+group_by(ano) %>%
+summarise(estatutario = sum(quantidade_vinculos_estatutarios))
+
+estoque_est_clt <- estoque_est_clt %>%
+  mutate(Estatutario = estoque_est_clt_2$estatutario)
+           
+```
+
+No intuito de analisar a evolução dos dois regimes de estoque de trabalho, estatutário e CLT, esboçamos um outro gráfico para verificar se o estoque de trabalho do serviço público variou em proporções muito diferentes do estoque de trabalho do setor privado.
+
+Os dados sinalizam que o serviço privado (CLT) vem apresentando tendência de crescimento ao longo do tempo. Já o serviço público apresenta uma tendência de estabilização: sofreu pequenas variações comparativamente ao privado.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+  ggplot(estoque_est_clt, aes(x=ano))+
+  geom_line(aes(y=CLT, color="CLT"), size=1)+
+  geom_line(aes(y=Estatutario, color="Estatutario"), size=1)+
+  theme(legend.position = "right",
+        legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(x='Ano', 
+       y='Estoque',
+       title="Estoque de trabalho (RAIS)",
+       subtitle = "Ouro Preto (2005-2020)",
+       caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da RAIS')
+           
+```
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_saude = estoque_selec %>%
+  filter(div_cnae_2 == c("ATIVIDADES DE ATENÇÃO À SAÚDE HUMANA",
+                         "ATIVIDADES DE ATENÇÃO À SAÚDE HUMANA INTEGRADAS COM ASSISTÊNCIA SOCIAL, PRESTADAS EM RESIDÊNCIAS COLETIVAS E PARTICULARES"))
+
+estoque_selec_saude <- estoque_selec_saude %>%
+  group_by(ano) %>%
+  summarise(total_clt = sum(quantidade_vinculos_clt),
+            total_estatutarios = sum(quantidade_vinculos_estatutarios))
+
+           
+```
+
+A tabela abaixo apresenta esses mesmos dados mas em forma númerica para o período analisado. Avaliando o estoque de trabalho celetista, podemos constatar que o menor estoque foi de 9472, em 2005, ao passo que o maior, para o mesmo setor, foi de 17001, em 2012. Por outro lado, ao analisarmos o estoque de trabalho estatutário, constatamos que o menor estoque de trabalho para esse regime foi de 2366, em 2006, e o máximo de 4814, em 2015.
+
+### Tabela  2
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_est_clt %>%
+  gt(groupname_col = "e") %>%
+  tab_header(title = md("**Estoque de Trabalho - Ouro Preto**"),
+             subtitle = glue("2005-2020")) %>%
+  tab_source_note(md("**Dados**: RAIS | **Elaboração**: Diretoria de Estudos Econômicos")) %>%
+  cols_label(ano = "Ano",
+             CLT = "CLT",
+             Estatutario = "Estatutário")
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=15, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_1 <- estoque_selec %>%
+  filter(div_cnae_2 %in% c("ADMINISTRAÇÃO PÚBLICA, DEFESA E SEGURIDADE SOCIAL","AGÊNCIAS DE VIAGENS, OPERADORES TURÍSTICOS E SERVIÇOS DE RESERVAS","ALIMENTAÇÃO","ALOJAMENTO","ALUGUÉIS NÃO-IMOBILIÁRIOS E GESTÃO DE ATIVOS INTANGÍVEIS NÃO-FINANCEIROS","ARMAZENAMENTO E ATIVIDADES AUXILIARES DOS TRANSPORTES","ATIVIDADES ARTÍSTICAS, CRIATIVAS E DE ESPETÁCULOS","ATIVIDADES AUXILIARES DOS SERVIÇOS FINANCEIROS, SEGUROS, PREVIDÊNCIA COMPLEMENTAR E PLANOS DE SAÚDE","ATIVIDADES CINEMATOGRÁFICAS, PRODUÇÃO DE VÍDEOS E DE PROGRAMAS DE TELEVISÃO; GRAVAÇÃO DE SOM E EDIÇÃO DE MÚSICA
+","ATIVIDADES DE ATENÇÃO À SAÚDE HUMANA","ATIVIDADES DE ATENÇÃO À SAÚDE HUMANA INTEGRADAS COM ASSISTÊNCIA SOCIAL, PRESTADAS EM RESIDÊNCIAS COLETIVAS E PARTICULARES","ATIVIDADES DE EXPLORAÇÃO DE JOGOS DE AZAR E APOSTAS
+","ATIVIDADES DE ORGANIZAÇÕES ASSOCIATIVAS","ATIVIDADES DE PRESTAÇÃO DE SERVIÇOS DE INFORMAÇÃO"))
+           
+```
+
+## Estoque de trabalho por seção CNAE 2.0
+
+Nas próximas cinco páginas, apresentamos o estoque de trabalho por divisão CNAE 2.0 com dados da RAIS, portanto, é considerado o estoque de trabalho do setor público e privado.
+
+Nossa análise permite inferir, que, depois do setor público (Administração Pública, Defesa e Seguridade Social), as atividades que mais empregaram em Ouro Preto, são: Serviços de Arquitetura e Engenharia, Testes e Análises Clínicas (2020 empregou 3447 pessoas); Comércio Varejista (2020 empregou 2233 pessoas), Alimentação (2020 empregou 683 pessoas), Alojamento (2020 empregou 495 pessoas), Atividades de Atenção à Saúde Humana (2020 empregou 643 pessoas) e Metalurgia (2020 empregou 445 pessoas). As demais atividades oscilaram, nos anos de 2005 a 2020, entre 0 a 400 empregos por ano, na média.
+
+Os gráficos a seguir resumem esses dados.
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=14, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_1 %>%
+  group_by(ano, div_cnae_2) %>%
+  summarise(Valor = sum(quantidade_vinculos_ativos)) %>%
+  ggplot(aes(x=ano, y=Valor))+
+  geom_col()+
+  geom_label(aes(label=Valor), size=2)+
+  facet_wrap(~div_cnae_2, scale = "free", ncol = 2)+
+  theme(legend.position = "right",
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"),
+        legend.text = ggplot2::element_text(face = "bold"))+
+  labs(x='Ano', 
+       y='Estoque',
+    title="Estoque de trabalho por divisão CNAE 2.0 (RAIS)",
+    subtitle = "2005-2020",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados ds RAIS')
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=14, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_2 <- estoque_selec %>%
+  filter(div_cnae_2 %in% c("ATIVIDADES DE RÁDIO E DE TELEVISÃO","ATIVIDADES DE SEDES DE EMPRESAS E DE CONSULTORIA EM GESTÃO EMPRESARIAL","ATIVIDADES DE SERVIÇOS FINANCEIROS","ATIVIDADES DE VIGILÂNCIA, SEGURANÇA E INVESTIGAÇÃO","ATIVIDADES DOS SERVIÇOS DE TECNOLOGIA DA INFORMAÇÃO","ATIVIDADES ESPORTIVAS E DE RECREAÇÃO E LAZER","ATIVIDADES IMOBILIÁRIAS","ATIVIDADES JURÍDICAS, DE CONTABILIDADE E DE AUDITORIA","ATIVIDADES LIGADAS AO PATRIMÔNIO CULTURAL E AMBIENTAL","ATIVIDADES VETERINÁRIAS","CAPTAÇÃO, TRATAMENTO E DISTRIBUIÇÃO DE ÁGUA","COLETA, TRATAMENTO E DISPOSIÇÃO DE RESÍDUOS; RECUPERAÇÃO DE MATERIAIS","COMÉRCIO E REPARAÇÃO DE VEÍCULOS AUTOMOTORES E MOTOCICLETAS","COMÉRCIO POR ATACADO, EXCETO VEÍCULOS AUTOMOTORES E MOTOCICLETAS","COMÉRCIO VAREJISTA"))
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=14, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_2 %>%
+  group_by(ano, div_cnae_2) %>%
+  summarise(Valor = sum(quantidade_vinculos_ativos)) %>%
+  ggplot(aes(x=ano, y=Valor))+
+  geom_col()+
+  geom_label(aes(label=Valor), size=2)+
+  facet_wrap(~div_cnae_2, scale = "free", ncol = 2)+
+  theme(legend.position = "right",
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"),
+        legend.text = ggplot2::element_text(face = "bold"))+
+  labs(x='Ano', 
+       y='Estoque',
+    title="Estoque de trabalho por divisão CNAE 2.0 (RAIS)",
+    subtitle = "2005-2020",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da RAIS')
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=14, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_3 <- estoque_selec %>%
+  filter(div_cnae_2 %in% c("CONFECÇÃO DE ARTIGOS DO VESTUÁRIO E ACESSÓRIOS","CONSTRUÇÃO DE EDIFÍCIOS","CORREIO E OUTRAS ATIVIDADES DE ENTREGA","EDIÇÃO E EDIÇÃO INTEGRADA À IMPRESSÃO","EDUCAÇÃO","ELETRICIDADE, GÁS E OUTRAS UTILIDADES","ESGOTO E ATIVIDADES RELACIONADAS", "FABRICAÇÃO DE BEBIDAS","FABRICAÇÃO DE CELULOSE, PAPEL E PRODUTOS DE PAPEL","FABRICAÇÃO DE COQUE, DE PRODUTOS DERIVADOS DO PETRÓLEO E DE BIOCOMBUSTÍVEIS","FABRICAÇÃO DE EQUIPAMENTOS DE INFORMÁTICA, PRODUTOS ELETRÔNICOS E ÓPTICOS","FABRICAÇÃO DE MÁQUINAS E EQUIPAMENTOS","FABRICAÇÃO DE MÓVEIS","FABRICAÇÃO DE PRODUTOS ALIMENTÍCIOS","FABRICAÇÃO DE PRODUTOS DE BORRACHA E DE MATERIAL PLÁSTICO","FABRICAÇÃO DE PRODUTOS DE MADEIRA"))
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=14, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_3 %>%
+  group_by(ano, div_cnae_2) %>%
+  summarise(Valor = sum(quantidade_vinculos_ativos)) %>%
+  ggplot(aes(x=ano, y=Valor))+
+  geom_col()+
+  geom_label(aes(label=Valor), size=2)+
+  facet_wrap(~div_cnae_2, scale = "free", ncol = 2)+
+  theme(legend.position = "right",
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"),
+        legend.text = ggplot2::element_text(face = "bold"))+
+  labs(x='Ano', 
+       y='Estoque',
+    title="Estoque de trabalho por divisão CNAE 2.0 (RAIS)",
+    subtitle = "2005-2020",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da RAIS')
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=14, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_4 <- estoque_selec %>%
+  filter(div_cnae_2 %in% c("FABRICAÇÃO DE PRODUTOS DE METAL, EXCETO MÁQUINAS E EQUIPAMENTOS","FABRICAÇÃO DE PRODUTOS DE MINERAIS NÃO-METÁLICOS","FABRICAÇÃO DE PRODUTOS DIVERSOS","FABRICAÇÃO DE PRODUTOS DO FUMO","FABRICAÇÃO DE PRODUTOS FARMOQUÍMICOS E FARMACÊUTICOS","FABRICAÇÃO DE PRODUTOS QUÍMICOS","FABRICAÇÃO DE PRODUTOS TÊXTEIS","IMPRESSÃO E REPRODUÇÃO DE GRAVAÇÕES","MANUTENÇÃO, REPARAÇÃO E INSTALAÇÃO DE MÁQUINAS E EQUIPAMENTOS","METALURGIA","OBRAS DE INFRA-ESTRUTURA","ORGANISMOS INTERNACIONAIS E OUTRAS INSTITUIÇÕES EXTRATERRITORIAIS"))
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=14, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_4 %>%
+  group_by(ano, div_cnae_2) %>%
+  summarise(Valor = sum(quantidade_vinculos_ativos)) %>%
+  ggplot(aes(x=ano, y=Valor))+
+  geom_col()+
+  geom_label(aes(label=Valor), size=2)+
+  facet_wrap(~div_cnae_2, scale = "free", ncol = 2)+
+  theme(legend.position = "right",
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"),
+        legend.text = ggplot2::element_text(face = "bold"))+
+  labs(x='Ano', 
+       y='Estoque',
+    title="Estoque de trabalho por divisão CNAE 2.0 (RAIS)",
+    subtitle = "2005-2020",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da RAIS')
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=15, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_5 <- estoque_selec %>%
+  filter(div_cnae_2 %in% c("OUTRAS ATIVIDADES DE SERVIÇOS PESSOAIS","PESQUISA E DESENVOLVIMENTO CIENTÍFICO","PREPARAÇÃO DE COUROS E FABRICAÇÃO DE ARTEFATOS DE COURO, ARTIGOS PARA VIAGEM E CALÇADOS","PUBLICIDADE E PESQUISA DE MERCADO","REPARAÇÃO E MANUTENÇÃO DE EQUIPAMENTOS DE INFORMÁTICA E COMUNICAÇÃO E DE OBJETOS PESSOAIS E DOMÉSTICOS","SEÇÃO Q CNAE2.0 - SAÚDE HUMANA E SERVIÇOS SOCIAIS","SEGUROS, RESSEGUROS, PREVIDÊNCIA COMPLEMENTAR E PLANOS DE SAÚDE","SELEÇÃO, AGENCIAMENTO E LOCAÇÃO DE MÃO-DE-OBRA","SERVIÇOS DE ARQUITETURA E ENGENHARIA; TESTES E ANÁLISES TÉCNICAS","SERVIÇOS DE ASSISTÊNCIA SOCIAL SEM ALOJAMENTO","SERVIÇOS DE ESCRITÓRIO, DE APOIO ADMINISTRATIVO E OUTROS SERVIÇOS PRESTADOS ÀS EMPRESAS","SERVIÇOS DOMÉSTICOS","SERVIÇOS ESPECIALIZADOS PARA CONSTRUÇÃO","SERVIÇOS PARA EDIFÍCIOS E ATIVIDADES PAISAGÍSTICAS","TELECOMUNICAÇÕES","TRANSPORTE AQUAVIÁRIO","TRANSPORTE TERRESTRE"))
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=14, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_5 %>%
+  group_by(ano, div_cnae_2) %>%
+  summarise(Valor = sum(quantidade_vinculos_ativos)) %>%
+  ggplot(aes(x=ano, y=Valor))+
+  geom_col()+
+  geom_label(aes(label=Valor), size=2)+
+  facet_wrap(~div_cnae_2, scale = "free", ncol = 2)+
+  theme(legend.position = "right",
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"),
+        legend.text = ggplot2::element_text(face = "bold"))+
+  labs(x='Ano', 
+       y='Estoque',
+    title="Estoque de trabalho por divisão CNAE 2.0 (RAIS)",
+    subtitle = "2005-2020",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da RAIS')
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=7, fig.height=15, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_domestica <- estoque_selec %>%
+  filter(div_cnae_2 %in% c("SERVIÇOS DOMÉSTICOS"))
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=8, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_domestica %>%
+  group_by(ano, div_cnae_2) %>%
+  summarise(Valor = sum(quantidade_vinculos_ativos)) %>%
+  ggplot(aes(x = ano, y = Valor)) +
+  geom_col() +
+  theme_minimal() +
+  geom_label(aes(label = Valor), size = 2) +
+  theme(legend.position = "right",
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"),
+        legend.text = ggplot2::element_text(face = "bold")) +
+  labs(x = 'Ano', 
+       y = 'Estoque',
+       title = "Número de trabalhadores(as) domésticos - Ouro Preto",
+       subtitle = "CNAE - SERVIÇOS DOMÉSTICOS (2010-2020)",
+       caption = 'Elaoração: Fábio Rocha - Dados: RAIS (Relação Anual de Informações Sociais)')
+
+
+```
+
+Por outro lado, quando analisamos o estoque de trabalho por tamanho da empresa, verificamos que as empresas de tamanho até 99 (“até 4”, “5 a 9”, “10 a 19” e “20 a 49”, “50 a 99”) são as empresas que apresentaram um estoque de trabalho relativamente consistente - em alguns casos apresentando crescimento e outro decrescimento - e que na média, empregou pelo menos 1.200 a 1.300 pessoas no ano. Já as empresas de médio e grande porte, foram mais voláteis a oscilações ao longo do período considerado, embora as empresas de tamanho 250 a 499 apresentam uma leve e ligeira tendência de crescimento.
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=12, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_tamanho <- estoque_selec %>%
+  filter(tamanho != "ZERO")
+
+estoque_selec_tamanho %>%
+  group_by(ano, tamanho) %>%
+  summarise(Valor = sum(quantidade_vinculos_clt)) %>%
+  ggplot(aes(x=ano, y=Valor))+
+  geom_col()+
+  geom_text(aes(label=Valor), size=3.2, angle=90, hjust=1, color="white")+
+  facet_wrap(~tamanho, scales = "free", ncol = 3)+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(x='Mês/Ano', 
+       y='Estoque',
+       title="Estoque de trabalho e tamanho do estabelecimento",
+       subtitle = "Número de pessoas empregas por estabelecimento (2005-2020)",
+       caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da RAIS')
+           
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=12, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_tur <- estoque_selec %>%
+  filter(div_cnae_2 %in% c("TRANSPORTE TERRESTRE", "ALIMENTAÇÃO", "ALOJAMENTO","AGÊNCIAS DE VIAGENS, OPERADORES TURÍSTICOS E SERVIÇOS DE RESERVAS", "ATIVIDADES LIGADAS AO PATRIMÔNIO CULTURAL E AMBIENTAL", "ATIVIDADES ARTÍSTICAS, CRIATIVAS E DE ESPETÁCULOS","ATIVIDADES ESPORTIVAS E DE RECREAÇÃO E LAZER"))
+           
+```
+
+## Empregos formais na Atividade Turística: um estimativa
+
+Um outro dado relevante e que sempre é levantado no debate público sobre emprego é o que diz respeito ao emprego no setor turístico. Segundo o Sistema de Informações sobre o Mercado de Trabalho no Setor Turismo - SIMT, em Portal próprio do IPEA, existe duas concepções de mensurar o turismo:
+
+>>> "Segundo a OMT, há duas formas de mensurar o emprego relacionado ao turismo. Uma considera a totalidade das ocupações nas ACTs, independentemente de elas estarem relacionadas ao consumo de turistas ou não. De acordo com a nomenclatura da OMT, esse seria o "emprego nas indústrias do turismo" ou "emprego nas ACTs".
+A segunda consiste em contabilizar apenas o "emprego estritamente relacionado aos bens e serviços adquiridos por visitantes", mas não se restringe apenas às ACTs. De acordo com a nomenclatura da OMT, este seria o "emprego no turismo". No âmbito do SIMT, contabiliza-se apenas o emprego referente às ACTs. Outras atividades relacionadas a serviços consumidos por turistas como o comércio e seguros, a título de exemplo, não são consideradas nas estatísticas do SIMT em virtude da dificuldade em se apurar o coeficiente de consumo turístico ou por sua menor expressão no total dos gastos de turistas.
+Pela primeira forma, para dimensionar o mercado de trabalho no turismo, consideram-se, por exemplo, todos os empregos na ACT alimentação. Pela segunda, são contabilizados apenas os empregos relacionados ao consumo de turistas, ou seja, apenas uma parcela dos empregos na ACT alimentação. Apesar de a segunda forma apresentar visão mais realista da dimensão do mercado de trabalho do turismo, seu cálculo exige informações relativas ao consumo turístico que, na maioria das vezes, não estão disponíveis nos países. Tendo isso em vista, no Brasil, muitas estatísticas referentes ao mercado de trabalho no turismo adotam a primeira forma, o que leva ao superdimensionamento da ocupação no setor.
+Visitantes compreendem turistas (que pernoitam) e excursionistas (que não pernoitam) de acordo com as IRTS 2008. No SIMT, simplificando, utiliza-se o termo turista referindo-se a visitantes."
+
+Considerando a conceituação adotada pelo Instituto de Pesquisa Econômica Aplicada, e a partir dos dados da RAIS, fizemos um exercício de estimar o estoque de trabalho neste setor para Ouro Preto.
+
+```{r, echo=F, eval=T, results='asis', fig.width=12, fig.height=9, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_tur %>%
+  group_by(ano, div_cnae_2) %>%
+  summarise(Valor = sum(quantidade_vinculos_ativos)) %>%
+  ggplot(aes(x=ano, y=Valor))+
+  geom_col()+
+  geom_label(aes(label=Valor), size=3.2)+
+  facet_wrap(~div_cnae_2, scales = "free", ncol = 2)+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(x='Mês/Ano', 
+       y='Estoque',
+       title="Estoque de trabalho - Turismo",
+       subtitle = "Número de pessoas empregadas no turismo (2005-2020)",
+       caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da RAIS')
+           
+```
+
+Os dados apresentados nos gráficos acima permitem acompanharmos a evolução do número de empregos no setor turismo conforme a definição proposta pelo OMT. As três principais atividades que apresentaram maior estoque de trabalho são: Alimentação, Alojamento e Transporte Terrestre. Embora todas as três atividades empreguem um número expressivo de pessoas, as atividades Alojamento e Alimentação passaram a apresentar uma queda nos últimos anos.
+
+A Tabela 3 sumariza esses empregos por ano. Destacam-se as seguintes informações: na média, entre 2005 a 2020, o emprego médio, por ano, do setor, foi de 2.062 pessoas. Já o emprego mínimo em toda série foi de 1.658, ao passo que o emprego máximo foi de 2.396.
+
+Se observarmos, a atividade que teve maior peso na redução do estoque de trabalho no ano de 2020, foi a Alimentação. A pandemia ocasionada pelo novo Coronavírus, evidentemente, fez com que as demissões em massa ocorressem nesses setores, haja vista a necessidade de fechamento do comércio nas fases iniciais daquele período e um certo prolongamento desse fechamento até o início da reabertura gradual.
+
+Importante destacar que esse estoque de emprego é o emprego formal, isto é, pessoas sob regime de CLT. ^[Há uma hipótese entre outros setores do serviço público, e mesmo da própria sociedade, de que o setor Turismo empregue mais de 6.000 pessoas atualmente; Se este for o caso, é provável que essa diferença esteja na informalidade. Não resta dúvida que um estudo específico para este caso seria de grande relevância.] 
+
+### Tabela 3
+
+```{r, echo=F, eval=T, results='asis', fig.width=12, fig.height=8, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_selec_tur_tab <- estoque_selec_tur %>%
+  group_by(ano) %>%
+  summarise(Valor = sum(quantidade_vinculos_ativos))
+
+estoque_selec_tur_tab %>%
+  gt(groupname_col = "") %>%
+  tab_header(title = md("**Empregos formais no Turismo**"),
+             subtitle = glue("Ouro Preto | 2006-2020")) %>%
+  tab_source_note(md("**Dados**: RAIS | **Elaboração**: Diretoria de Estudos Econômicos")) %>%
+  cols_label(ano = "Ano",
+             Valor = "Empregos")
+           
+```
+
