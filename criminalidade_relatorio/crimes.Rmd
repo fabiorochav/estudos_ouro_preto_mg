@@ -1,0 +1,1054 @@
+---
+title: "Criminalidade na Região dos Inconfidentes ^[O script em linguagem R desenvolvido para elaboração deste relatório encontra-se disponível em https://github.com/fabiorochav]"
+author: ""
+date: "`r format(Sys.time(), '%d de %B, %Y')`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+  html_document:
+    df_print: paged
+  word_document: default
+subtitle: '**Secretaria de Desenvolvimento Econômico, Inovação e Tecnologia**'
+---
+```{r, echo=F, eval=T, results='asis', fig.width=9, fig.height=7, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+knitr::opts_chunk$set(echo = TRUE)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+library(tidyverse)
+library(readxl)
+library(magrittr)
+library(ggplot2)
+library(ggrepel)
+library(readr)
+library(scales)
+library(patchwork)
+library(lubridate)
+library(dplyr)
+library(grDevices)
+library(tidyr)
+library(forecast)
+library(gt)
+library(glue)
+library(formattable)
+library(knitr)
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+populacao <- read_xlsx("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/Banco Crimes Violentos - Atualizado 02 - Fevereiro.xlsx", 
+                       sheet = 4, 
+                       range = "B1:P854" )
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+populacao <- populacao %>%
+  select(
+    `MUNICÍPIO`,
+    `2009`,
+    `2010`,
+    `2011`,
+    `2012`,
+    `2013`,
+    `2014`,
+    `2015`,
+    `2016`,
+    `2017`,
+    `2018`,
+    `2019`,
+    `2020`,
+    `2021`) %>%
+      filter(`MUNICÍPIO` %in% c("ITABIRITO", "OURO PRETO", "MARIANA"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+ 
+populacao2 <- populacao %>%
+  pivot_longer(c(`2009`,`2010`,`2011`,`2012`,`2013`,`2014`,`2015`,`2016`,`2017`,`2018`,`2019`,`2020`,`2021`), 
+                names_to = "Ano", values_to = "População")
+
+
+populacao3 <- populacao2 %>%
+  pivot_wider(names_from = `MUNICÍPIO`, values_from = `População`)
+```
+
+# Texto para discusssão nº 02
+
+**Estudos Econômicos |** Fábio Rocha ^[Graduado em Filosofia pela Universidade
+Federal de Ouro Preto e graduando em Ciências Econômicas pela Universidade Federal de Ouro Preto, atua na Diretoria de Estudos Econômicos na Secretaria de Desenvolvimento Econômico, Inovação e Tecnologia de Ouro Preto. Agradeço ao professor de economia da UFOP Dr. Carlos Eduardo da Gama Torres pelas contribuições técnicas para elaboração deste relatório]
+**Revisão Textual |** Nathalia Souza Silva ^[Jornalista pela UFOP, atua na Diretoria de Comunicação na Secretaria de Desenvolvimento Econômico, Inovação e Tecnologia de Ouro Preto.]
+
+
+## Resumo
+
+Este relatório se apresenta com o objetivo de explicitar algumas estatísticas relacionadas a criminalidade na Região dos Inconfidentes. Duas são as bases de dados, públicas, que foram usadas para elaboração deste relatório: Atlas da Violência (IPEA) e Dados Abertos da Secretaria de Segurança Pública e Justiça de Minas Gerais. Além de trazer tais estatísticas gerais, este relatório busca fomentar discussões acerca da segurança pública e políticas públicas relacionadas a criminalidade. Ao mesmo tempo, conforme poderemos observar, embora Ouro Preto seja uma cidade mais populosa, isso não refletiu necessariamente nos indices de criminalidade. Os dados gerais apontam que Ouro Preto registrou menos homicídios, queda de registros de violência contra mulher, menos óbitos por arma de fogo, e, em alguns casos, menores registros de furtos e roubo entre os anos 2000 a 2022 - quando comparado com as cidades de Ouro Preto. Nossa hipótese - já amplamente discutida na literatura especializada - quanto a esse melhor desempenho, isto é, menor taxa de criminialidade em Ouro Preto, está negativamente relacionada a renda per capita no município (maiores rendas per capita, menores índices de criminalidade), e, por outro lado, escolaridade média, tendo como proxy ^[Em Ciência Socias é comum utilizar uma variável em substituição a outra, por vezes, por ausência de dados. Por exemplo, queremos quantificar a variável "experiência" e quanto ela impacta, em média, o salário. Porém, como não conseguimos mensurar essa experiência com total precisão, utilizamos uma proxy (representativa), que neste caso pode ser os anos de atuação no mercado de trabalho.] para educação/escolaridade média, o Índice de Desenvolvimento Humano Educação que apresenta melhores indices em 1991, 2000 e 2010 até mesmo quando comparado ao Brasil.
+
+## Introdução
+
+Este relatório visa apresentar estatísticas gerais sobre a criminalidade na Região dos Inconfidentes a partir das bases de dados da Secretaria de Justiça e Segurança Pública de Minas Gerais e o Atlas da Violência (IPEA). Conforme poderemos observar, Ouro Preto apresentou menores registros de violência e criminalidade quando comparado aos municípios vizinhos. Nossa hipótese, somado aos dispositivos legais instituídos no período analisado, como Lei Maria da Penha (2006), Estatuto do Desarmamento (2003) e Lei do Feminicídio (2015), é que a renda per capita e o IDHM Educação podem ser um forte indicativo de explicação desse melhor desempenho. No caso da renda per capita utilizamos os dados disponíveis no Sidra IBGE, e também num outro estudo já públicado^[Ver: https://ouropreto.mg.gov.br/static/arquivos/menus_areas/estudos_economicos.pdf?dc=2543], no qual Ouro Preto apresenta renda per capita maior que Mariana e Itabirito entre os anos 2010 a 2019, exceto em 2011. E no caso do IDHM Educação, os dados disponíveis no Atlas do Desenvolvimento Humano evidenciam que Ouro Preto esteve à frente das cidades vizinhas e até mesmo comparado com o Brasil. Quanto à literatura, indicando efeito negativo sobre as taxas de criminalidade, duas podem ser mencionadas: *Dois ensaios acerca da relação entre criminalidade e educação* (Teixeira, 2011) e *Crime e Renda no Brasil* (Pereira, 2017).
+
+Para tanto, este relatório está divido em 10 partes, exceto essa breve introdução, com alguns subtópicos entre as partes. 
+
+(1) Populações dos municípios;
+(2) Índice de Desenvolvimento Humano Municipal - Educação
+(3) Número de homicídios entre o ano de 2012 a fevereiro de 2022; 
+(4) Homicídios por 10.000 habitantes; 
+(5) Registros de lesão corporal e furtos; 
+(6) Registros de violência contra mulher; 
+(6.1) Registros de violência contra a mulher por mês (2019-fev-2022); 
+(6.2) Registros de Violência contra mulher em Ouro Preto (2019-fev-2022); 
+(6.3) Registros de Violência contra mulher em Itabirito (2019-fev-2022); 
+(6.4) Registros de Violência contra a mulher em Mariana (2019-fev-2022);
+(6.5) Registros de Vítimas de feminicídio - tentado e consumado; 
+(7) Alvo de roubos na Região dos Inconfidentes (2015-fev-2022); 
+(8) Alvo de furtos na Regiao dos Inconfidentes (2015-fev-2022); 
+(9) Veículos roubados na Região dos Inconfidentes (2015-fev-2022); 
+(9.1) Veículos roubados em Ouro Preto (2015-fev-2022); 
+(9.2) Veículos roubados em Mariana (2015-fev-2022); 
+(9.3) Veículos roubados em Itabirito (2015-fev-2022); 
+(10) Óbitos por arma de fogo (2000-2019);
+(10.1) Óbitos de mulheres por arma de fogo (2000-2019); 
+(10.2) Óbitos de homens por armas de fogo (2000-2019); 
+(10.3) Óbitos de jovens por arma de fogo (2000-2019); 
+(11) Considerações finais.
+
+## População da Região dos Inconfidentes
+
+Os dados em tela são estimativas das respectivas populações dos municípios. Como podemos observar, o crescimento populacional das cidades de Mariana e Itabirito vem ocorrendo de forma mais acelerada quando comparado com Ouro Preto. Conforme nota metodológica nº1 do IBGE para o cálculo de estimativas:
+
+>> As Projeções da População das Unidades da Federação, insumo básico para cálculo das estimativas municipais populacionais, foram revisadas e publicadas em 2018, com a atualização da componente fecundidade até o ano de 2016. Foi a primeira vez que as Projeções da População foram atualizadas a partir dos registros de nascimentos observados (e ajustados) desde 2010, e, não, por meio de métodos indiretos de cálculos demográficos, resultado da melhoria da captação e da cobertura dos sistemas de registros de nascimento. Não obstante, foi necessário estimar fatores de ajustes diferenciados para cada Estado para corrigir possíveis sub-registros. No caso dos óbitos, ainda é necessário utilizar metodologias demográficas indiretas para correção dos dados, também devido ao sub-registro.
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+ggplot(populacao3, aes(x=as.integer(Ano)))+ 
+  geom_line(aes(y=`OURO PRETO`, color="OURO PRETO"), size=1)+
+  geom_line(aes(y=MARIANA, color="MARIANA"), size=1)+
+  geom_line(aes(y=ITABIRITO, color="ITABIRITO"), size=1)+
+  #theme(axis.text.x=element_text(angle=65, hjust=1, vjust=1))+
+  theme(legend.title = element_blank(),
+        legend.position = "right",
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"),
+        legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='População',
+    title='População (2009-2021)', 
+    subtitle = 'Gráfico 1',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+data <- read_excel("C:/Users/13665625777/Downloads/data.xlsx", 
+    range = "A1:M5")
+View(data)
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+data <- data %>%
+  select(`Territorialidades`, `IDHM Educação 1991`, `IDHM Educação 2000`, `IDHM Educação 2010`)
+
+
+```
+
+## Índice de Desenvolvimento Humano Municipal - Educação
+
+O IDHM brasileiro segue as mesmas três dimensões do IDH global – saúde, educação e renda, mas vai além: adequa a metodologia global ao contexto brasileiro e à disponibilidade de indicadores nacionais. Embora meçam os mesmos fenômenos, os indicadores levados em conta no IDHM são mais adequados para avaliar o desenvolvimento dos municípios brasileiros.(AtlasBR, 2022).
+
+ACESSO AO CONHECIMENTO (educação) O acesso ao conhecimento é um determinante crítico para o bem-estar e é essencial para o exercício das liberdades individuais, da autonomia e da auto-estima. A educação é fundamental para expandir as habilidades das pessoas para que elas possam decidir sobre seu futuro. Educação constrói confiança, confere dignidade, e amplia os horizontes e as perspectivas de vida.(AtlasBR, 2022).
+
+IDHM Educação é o resultado medido por meio de dois indicadores. A escolaridade da população adulta é medida pelo percentual de pessoas de 18 anos ou mais de idade com ensino fundamental completo - tem peso 1. O fluxo escolar da população jovem é medido pela média aritmética do percentual de crianças de 5 a 6 anos frequentando a escola, do percentual de jovens de 11 a 13 anos frequentando os anos finais do ensino fundamental, do percentual de jovens de 15 a 17 anos com ensino fundamental completo e do percentual de jovens de 18 a 20 anos com ensino médio completo - tem peso 2. A medida acompanha a população em idade escolar em quatro momentos importantes da sua formação. Isso facilita aos gestores identificar se crianças e jovens estão nas séries adequadas nas idades certas. A média geométrica desses dois componentes resulta no IDHM Educação. (AtlasBR, 2022).
+
+A tabela abaixo apresenta os dados de IDHM Educação para os três municípios da Região dos Inconfidentes e Brasil. E como podemos identificar, esse indicador performou melhor em Ouro Preto nos três períodos considerados.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+data %>%
+  gt(groupname_col = "IDHM Educação") %>%
+  tab_header(title = md("**Tabela 1: IDHM - Educação**")) %>%
+  tab_options(heading.align = "left",
+              column_labels.border.top.color = "black",
+              column_labels.border.top.width = px(4)) %>%
+  cols_align(align = "right", columns = 1:2) %>%
+  tab_source_note(md("**Fonte**: Atlas do Desenvolvimento Humano"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+homicid <- read.csv("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/Banco_Vtimas_de_Homicdio_Consumado_Atualizado_Fevereiro_2022.csv", 
+                    header = TRUE, sep = ';', 
+                    fileEncoding = "Latin1", 
+                    check.names = F)
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+homicide <- homicid %>%
+  select(
+    `Registros`,
+    `Município`,
+    `Mês`,
+    `Ano`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("ITABIRITO","OURO PRETO","MARIANA"))
+
+```
+
+## Homicídios consumados (2012-fev-2022)
+
+Nesta primeira parte, apresentamos o número de homícidios consumados nas três cidades, sua evolução ao longo do tempo e a proporção desses homícidios em cada município. Como podemos observar, embora o número de homicídios tenha crescido após o ano de 2012 e com um pico no ano de 2017, a série considerada se mostra com tendência de queda.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+
+ggplot(homicide, aes(x=as.character(ano), y=Registros))+
+  geom_col(aes(fill=Município))+
+  facet_wrap(~Município)+
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Homicídios consumados (2012-fev2022)', 
+    subtitle = 'Gráfico 2',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+populacao2 <- subset(populacao2[4:39,], select = c(MUNICÍPIO, Ano, `População`))
+
+homicidio2 <- group_by(homicide,Ano,Município) %>%
+  summarise(Total=sum(Registros))
+
+populacao2 <- populacao2 %>%
+  arrange(MUNICÍPIO)
+
+populacao2 <- populacao2 %>%
+  filter(Ano %in% c("2012","2013", "2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"))
+
+homicidio2 <- homicidio2 %>%
+  arrange(Município) %>%
+  filter(Ano != "2022")
+
+homic_pop <- populacao2 %>%
+  mutate(hom = homicidio2$Total) %>%
+  mutate(taxa = (hom/População)*10000)
+
+
+```
+
+## Número de homicídios por 10.000 habitantes
+
+No gráfico anterior, apresentamos as quantitades de homicídios em cada município, sem considerar o tamanho da população. Já neste segundo gráfico, apresentamos essas mesmas quantidades de homicídios, mas relativamente proporcional ao tamanho da população. Isto é, o número de homicídios por 10.000 habitantes ^[Este valor pode ser obtido a partir da divisão entre o número de homicídios ocorridos no ano, pelo número de habitantes no município no ano. Este resultado multiplica-se por 10.000. Se quiséssemos identificar o número de homicídios por 1000, 100 ou outros valores, bastaria multiplicar por algum desses valores ao invés de 10.000]. Como podemos observar, exceto os anos de 2012 e 2014, Ouro Preto sempre teve número de homicídios por 10.000 habitantes inferior aos municípios vizinhos. Ao mesmo tempo, Mariana apresenta um número de homicídios maior em sete, dos dez anos considerados (2012, 2013, 2014, 2017, 2018 e 2019). Já Itabirito, teve um número maior de homicídios por 10.000 habitantes nos anos 2015, 2020 e 2021.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(homic_pop, aes(x=Ano, y=taxa, fill = MUNICÍPIO))+
+  geom_col(position = "dodge")+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Nº de homicídios',
+    title='Número de homícidios por 10.000 habitantes', 
+    subtitle = 'Gráfico 3',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+
+lesao <- read.csv("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/Banco Outras Naturezas Armazm - Atualizado Fevereiro 2022.csv",
+                    header = TRUE, 
+                    sep = ';')
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+lesao <- lesao %>%
+  select(
+    `Registros`,
+    `Município`,
+    `Mês`,
+    `Ano`,
+    `Natureza`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("ITABIRITO","OURO PRETO","MARIANA"))
+
+```
+
+## Furto consumado e lesão corporal consumada
+
+Nesta parte, destacamos os números de registros de furtos e lesão corporal consumados nas três cidades. Importante destacar: o crime de furto é descrito como subtração, ou seja, diminuição do patrimônio de outra pessoa, sem que haja violência^[https://www.tjdft.jus.br/institucional/imprensa/campanhas-e-produtos/direito-facil/edicao-semanal/furto-e-roubo]. O que percebemos de imediato, é que se no gráfico anterior, Ouro Preto tinha um número menor de homicídios por 10.000 habitantes, já neste outro gráfico, fica explicito que o número de registros de furtos e lesão corporal é muito maior em toda a série considerada, exceto no anos de 2020 e 2021, para os registros de lesão corporal.
+Outro ponto relevante de análise é que, no geral, o número de furtos vinha crescendo entre 2012 a 2017 e, posteriormente, esse número passou a cair. Por outro lado, os crimes de lesão corporal parecem seguir uma tendência de estabilização, isto é, o mesmo número de crimes vem ocorrendo, em média, entre os anos de 2012 e 2021, embora em 2021 esse número tenha crescido muito acima da média - ano que coincide com o segundo ano de pandemia no Brasil e no mundo. Por fim, fica fácil identificar que os casos de lesão corporal parecem ter maior incidência nos municípios de Mariana e Ouro Preto, embora o somatório de registros de furtos consumados nos municípios sejam quase cinco vezes maior.
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+ggplot(lesao, aes(x=as.character(ano), y=Registros, fill=Natureza))+
+  geom_col(position = "dodge")+
+  facet_wrap(~Município)+
+  #facet_wrap(~Natureza, scales = "free")+
+  theme(axis.text.x=element_text(angle=45,hjust=1.2, vjust=1))+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Furtos e Lesão Corporal (2012-fev2022)', 
+    subtitle = 'Gráfico 4',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+#Outros crimes: Furto Consumado e Lesão Corporal Consumado
+
+mulher <- read_xlsx("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/Modelo_Sesp_Violencia Domestica e Familiar contra a Mulher.Jan19_Fev22 (1).xlsx", 
+                    sheet = 3)
+
+mulher <- mulher %>%
+  rename_with(~c("mun_cod","Município","Data","Mês","Ano","Registros"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mulher <- mulher %>%
+  select(
+    `Município`,
+    `Data`,
+    `Mês`,
+    `Ano`,
+    `Registros`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("ITABIRITO","OURO PRETO","MARIANA"))
+
+```
+
+## Número de registros de violência contra mulher
+
+Nesta sexta parte, apresentamos os números de registros de violência contra mulher. Como a base de dados é recente, os dados disponibilizados pela SEJUSP compreendem apenas o período de 2019 a fevereiro de 2022. Como podemos perceber, o número de registros de violência contra mulher vem crescendo na série considerada. Entretanto, esse crescimento foi puxado especialmente pelos municípios de Mariana e Itabirito. Enquanto Ouro Preto vem diminuindo o número de registros de violência contra mulher, os municípios vizinhos apresentam elevação.
+
+É importante destacar que essa redução do número de registros de violência contra mulher, para o município de Ouro Preto, pode ter causas diversas. A saber, alguma política pública que impacte diretamente esses indicadores, como criação de delegacias especializadas, ou ainda, um caso mencionado na literatura especializada, subnotificação^[Subnotificação e Lei Maria da Penha: https://www.revistas.uece.br/index.php/opublicoeoprivado/article/view/4108 Subnotificação e invisibilidade da violência contra a mulher: http://rmmg.org/artigo/detalhes/2170] . Ou seja, por conta de medo de exposição e ameças do então agressor, a vítima prefere não manifestar a denúncia.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+
+ggplot(mulher, aes(x=ano, y=Registros, fill=Município))+
+  geom_col()+
+  facet_wrap(~Município)+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='',
+    title='Número de registros de violência contra mulher (2019-fev2022)', 
+    subtitle = 'Gráfico 5',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mulher_op <- mulher %>%
+  select(
+    `Município`,
+    `Data`,
+    `Mês`,
+    `Ano`,
+    `Registros`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("OURO PRETO"))
+
+mulher$ano <- as.character(mulher$ano)
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mulher_ita <- mulher %>%
+  select(
+    `Município`,
+    `Data`,
+    `Mês`,
+    `Ano`,
+    `Registros`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("ITABIRITO"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mulher_mar <- mulher %>%
+  select(
+    `Município`,
+    `Data`,
+    `Mês`,
+    `Ano`,
+    `Registros`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("MARIANA"))
+
+```
+
+## Registros de violência contra a mulher (2019 a fev-2022)
+
+Nesta sétima parte, destacamos essas mesmas estatísticas relacionadas aos registros de violência contra mulher, mas por mês e por ano. De imediato, o que podemos observar é que, no município de Ouro Preto, registra-se com maior frequência casos de violência contra mulher. E somado 2019 a fevereiro de 2022, esses registros são em maior número no primeiro trimestre do ano (janeiro, fevereiro e março). E quando comparamos com os municípios vizinhos, esse comportamento tende a se reproduzir nos dois primeiros meses do ano.
+
+Nos próximos três gráficos são apresentados esses mesmos dados, mas por município. Isso possibilitará uma análise um pouco mais detalhada dessas ocorrências, viabilizando extração de algumas outras estatísticas.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+ggplot(mulher, aes(x=mes, y=Registros, fill=(ano)))+
+  geom_col()+
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  facet_wrap(~Município)+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Registros de violência contra mulher (2019-fev2022) por mês', 
+    subtitle = 'Gráfico 6',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+
+## Violência contra mulher (2019-fev-2022) | Ouro Preto
+
+Nos anos de 2019, 2020 e 2021, no total, foram registrados os seguintes números de violência contra mulher no município: 671, 611 e 580, respectivamente. Isso nos dá uma média de 55 casos por mês e 18 casos a cada 10 dias em 2019. Já em 2020, o número médio de registros por mês foi de 50, o que nos dá algo em torno de 16 casos a cada dia. E por fim, no ano de 2021, o número médio de casos foi de 48 casos por mês, ficando próximo de 16 casos a cada 10 dias.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+ggplot(mulher_op, aes(x=mes, y=Registros))+
+  geom_col(fill="royalblue1")+
+  facet_wrap(~as.character(ano))+
+  theme(legend.position = "bottom",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Violencia contra mulher (2019-fev-2022)', 
+    subtitle = 'Gráfico 7',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+
+## Violência contra mulher (2019-fev-2022) | Itabirito
+
+Nos anos de 2019, 2020 e 2021, no total, foram registrados os seguintes números de violência contra mulher no município: 285, 346 e 458, respectivamente. Isso nos dá uma média de 23 casos por mês e 7,9 casos a cada 10 dias em 2019. Já em 2020, o número médio de registros por mês foi de 28, o que nos dá algo em torno de 9,6 casos a cada 10 dias. E por fim, no ano de 2021, o número médio de casos foi de 38 casos por mês, ficando proximo de 12,1 casos a cada 10 dias. Ou seja, houve um crescimento do número de registros de casos de vilolência contra mulher em Itabirito.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+
+ggplot(mulher_ita, aes(x=mes, y=Registros))+
+  geom_col(fill="green4")+
+  facet_wrap(~as.character(ano))+
+  theme(legend.position = "bottom",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Violencia contra mulher (2019-fev-2022)', 
+    subtitle = 'Gráfico 8',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+ 
+
+
+```
+
+## Violência contra mulher (2019-fev-2022) | Mariana
+
+Nos anos de 2019, 2020 e 2021, no total, foram registrados os seguintes números de violência contra mulher no município: 486, 569 e 633, respectivamente. Isso nos dá uma média de 40 casos, em média, por mês e 13,5 casos a cada 10 dias em 2019. Já em 2020, o número médio de registros por mês foi de 47, o que nos dá algo em torno de 15 casos a cada dia. E por fim, no ano de 2021, o número médio de casos foi de 52,75 casos por mês, ficando proximo de 17,5 casos a cada 10 dias.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+
+ggplot(mulher_mar, aes(x=mes, y=Registros))+
+  geom_col(fill="tomato")+
+  facet_wrap(~as.character(ano))+
+  theme(legend.position = "bottom",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Violencia contra mulher (2019-fev-2022)', 
+    subtitle = 'Gráfico 9',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+
+## Vítimas de feminicídio - tentado e consumado (2019-fev-2022)
+
+Conforme define o relatório da Superintendência de Informações e Inteligência Policial da Polícia Civil de Minas Gerais - *Diagnóstico de violência doméstica e familiar contra a Mulher nas Regiões Integradas de Segurança Pública de Minas Gerais.* - "A Lei nº 13.104/2015 (que incluiu o inciso VI no § 1º e, também, o § 2º-A no art. 121, do Código Penal), denominada Lei do Feminicídio, que foi sancionada pela presidente Dilma Rousseff no dia 09 de março de 2015, tornou a morte violenta de mulheres por razões de gênero como crime hediondo. **O termo Feminicídio significa a hipótese do crime de homicídio contra a mulher pelo menosprezo ou discriminação à condição de mulher ou por razões de violência doméstica (art. 121, § 2-A, do Código Penal).** Esta lei altera o código penal, ao prever o Feminicídio como um tipo de homicídio qualificado e incluindo-o, dessa forma, no rol dos crimes hediondos, o que sugere um tratamento mais severo perante a justiça, indicando que na ocorrência de violência doméstica e familiar e menosprezo ou discriminação à condição de mulher já são qualificadoras para o crime citado". 
+
+Neste sentido, considerando a séria analisada, vemos que o número de vítimas de feminícidio consumado em Itabirito é maior do que os municípios vizinhos. Por outro lado, Ouro Preto tem o mesmo número de vítimas de feminicídio tentado. E por fim, Mariana parece seguir numa tendência de controle de casos de feminicidio, haja vista que desde 2020 o município não registra tais ocorrências.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+#Outros crimes: Furto Consumado e Lesão Corporal Consumado
+
+feminicidio <- read_xlsx("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/Modelo_Sesp_Feminicdio.Jan19_Fev22.xlsx", sheet = 2 )
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+feminicidio <- feminicidio %>%
+  select(
+    `TENTADO/CONSUMADO`,
+    "DATA" = `DATA DO FATO`, 
+     `MÊS`,
+    "ANO" = `ANO DO FATO`, 
+    "MUNICÍPIO" = `MUNICÍPIO DO FATO`, 
+    "VÍTIMAS" = `QTD DE VÍTIMAS`) %>%
+  filter(MUNICÍPIO %in% c("MARIANA", "ITABIRITO", "OURO PRETO"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+ggplot(feminicidio, aes(x=ANO, y=VÍTIMAS, fill=`TENTADO/CONSUMADO`))+
+  geom_col(position = "dodge")+
+  facet_wrap(~MUNICÍPIO)+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Vítimas de feminicídio | Tentado e consumado - (2019-fev-2022)', 
+    subtitle = 'Gráfico 10',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+alvo_roubo <- read.csv("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/Banco Alvos de Roubo - Atualizado Fevereiro 2022.csv",
+                       header = TRUE, sep = ";",
+                       fileEncoding = "Latin1", 
+                       check.names = F)
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+alvo_roubo <- alvo_roubo %>%
+  select(
+    `Município`,
+    `Alvos`,
+    `Mês`,
+    `Ano`,
+    `Registros`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("MARIANA", "OURO PRETO", "ITABIRITO"))
+
+```
+
+## Alvos de roubos (2015-fev-2022)
+
+Nesta seção, apresentamos os registros de roubos, por alvo, nas três cidades. Uma vez mais, é importante destacar a diferença entre roubo e furto. Conforme define o Tribunal de Justiça do Distrito Federal e dos Territórios, "*O crime de furto é descrito como subtração, ou seja, diminuição do patrimônio de outra pessoa, sem que haja violência. (...) O roubo é crime mais grave, descrito na lei como subtração mediante grave ameaça ou violência*." 
+
+Numa primeira avaliação, percebemos que o número de roubos vem diminuindo em todos os alvos (Cargas, Estabelecimento Comercial, Residência, Transeunte e Transporte Coletivo), quando considerado as três cidades em conjunto. Outro ponto de destaque é que o município de Itabirito tem um baixo número de registro de roubo em todos os alvos considerados. Em contraste, Ouro Preto teve um crescimento expressivo do número de roubos em residências, transeunte e transporte coletivo até o ano de 2018, a partir desse ano os números reduziram.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+
+ggplot(alvo_roubo, aes(x=ano, y=Registros, fill=Município))+
+  geom_col()+
+  facet_wrap(~Alvos, scales = "free")+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Alvo de roubos (2015-fev-2022)', 
+    subtitle = 'Gráfico 11',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+
+alvo_furto <- read.csv("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/Banco Alvos de Furto - Atualizado Fevereiro 2022.csv",
+                       header = TRUE, sep = ";",
+                       fileEncoding = "Latin1", 
+                       check.names = F)
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+alvo_furto <- alvo_furto %>%
+  select(
+    `Município`,
+    `Alvos`,
+    `Mês`,
+    `Ano`,
+    `Registros`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("MARIANA", "OURO PRETO", "ITABIRITO"))
+
+```
+
+## Alvo de furtos (2015-fev-2022)
+
+Se na seção anterior tratamos dos registros de roubos, isto é, quando há violência no ato de subtração de patrimonio da vítima, nesta parte apresentamos os furtos, quando não há violência. De imediato, percebemos que os números são expressivamente maiores em todos os alvos, exceto o de cargas, que permanece relativamente semelhante ao de roubos de cargas. Dois outros destaques são percebidos: a tendência de queda dos furtos, embora em menor proporção que os roubos; e a maior frequência desses crimes para a cidade de Ouro Preto. E um terceiro ponto importante, é que os três principais alvos de furtos são os de: Estabelecimento Comercial, Residência e Transeunte, embora todos eles venham apresentando ligeira tendência de queda.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+
+ggplot(alvo_furto, aes(x=ano, y=Registros, fill=Município))+
+  geom_col()+
+  facet_wrap(~Alvos, scales = "free")+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Alvo de furtos (2015-fev-2022)', 
+    subtitle = 'Gráfico 12',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+veiculos_roubados <- read.csv("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/Banco Veculos Roubados - Atualizado Fevereiro 2022.csv",
+                       header = TRUE, sep = ";",
+                       fileEncoding = "Latin1", 
+                       check.names = F)
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+veiculos_roubados <- veiculos_roubados %>%
+  select(
+    `Município`,
+    `Mês`,
+    `Ano`,
+    `Registros`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("MARIANA", "OURO PRETO", "ITABIRITO"))
+
+```
+
+## Veículos roubados (2015-fev-2022)
+
+Nas seções anteriores, apresentamos os registros relativos a roubos e furtos por alvo. Nesta parte, portanto, explicitaremos estes mesmos registros, mas relativo a roubo de veículos de transporte não coletivo. Conforme o gráfico abaixo apresenta, podemos observar que somados, os números de roubos de veículos nas três cidades cresceu entre 2015 e 2017. A partir daí, o número de roubos reduziu, exceto em 2021, que volta a crescer, mas em ligeira proporção.
+
+Nas próximas subseções apresentamos esses números por cada município.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+ggplot(veiculos_roubados, aes(x=ano, y=Registros, fill=Município))+
+  geom_col()+
+  #facet_wrap(~Alvos, scales = "free")+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Veículos roubados (2015-fev2022)', 
+    subtitle = 'Gráfico 13',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+veiculos_roub_op <- veiculos_roubados %>%
+  select(
+    `Município`,
+    `Mês`,
+    `Ano`,
+    `Registros`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("OURO PRETO"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+ggplot(veiculos_roub_op, aes(x=ano, y=Registros))+
+  geom_col(fill="royalblue1")+
+  #facet_wrap(~Alvos, scales = "free")+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Veículos roubados (2015-fev2022)', 
+    subtitle = 'Gráfico 14',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+veiculos_roub_ita <- veiculos_roubados %>%
+  select(
+    `Município`,
+    `Mês`,
+    `Ano`,
+    `Registros`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("ITABIRITO"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+veiculos_roub_mar <- veiculos_roubados %>%
+  select(
+    `Município`,
+    `Mês`,
+    `Ano`,
+    `Registros`) %>%
+  mutate(Ano_mes = make_date(Ano, Mês)) %>%
+  mutate(mes = month(Ano_mes, label = TRUE)) %>%
+  mutate(ano = year(Ano_mes)) %>%
+  filter(Município %in% c("MARIANA"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+
+ggplot(veiculos_roub_ita, aes(x=ano, y=Registros, fill=Município))+
+  geom_col(fill="green4")+
+  #facet_wrap(~Alvos, scales = "free")+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Veículos roubados (2015-fev2022)', 
+    subtitle = 'Gráfico 15',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}  
+
+
+ggplot(veiculos_roub_mar, aes(x=ano, y=Registros, fill=Município))+
+  geom_col(fill="firebrick2")+
+  #facet_wrap(~Alvos, scales = "free")+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Registros',
+    title='Veículos roubados (2015-fev2022)', 
+    subtitle = 'Gráfico 16',
+    caption='Fonte: Secretaria de Estado de Justiça e Segurança Pública-MG')
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mortes_arma <- read.csv("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/bitos-por-armas-de-fogo.csv", 
+                        header = TRUE, 
+                        sep = ";")
+
+mortes_arma <- mortes_arma %>%
+  rename_with(~c("cod","Municipio","Ano","valor"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mortes_arma <- mortes_arma %>%
+  filter(Municipio %in% c("Ouro Preto", "Mariana", "Itabirito"))
+
+```
+
+## Óbitos por arma de fogo (2000-2019)
+
+Nesta parte final passamos, então, a apresentar os registros relacionados a óbitos por arma de fogo.
+
+Conforme verifica-se no gráfico abaixo, Ouro Preto liderou o ranking de óbitos por armas de fogo nos anos 2013 e 2011, entre os anos 2000 a 2019. Já Mariana, nos anos 2000, 2001, 2008, 2010, 2012, 2013, 2014, 2015, 2016, 2017, 2018 e em 2019, manteve o mesmo número que Itabirito. Em contraste, Itabirito esteve à frente nos anos 2003, 2005, 2007 e 2009. Outro ponto de destaque nesta análise é que, Mariana parece seguir numa tendência de crescimento entre os anos 2000 a 2017, dando sinais de recuo apenas no ano seguinte.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=7, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+ggplot(mortes_arma, aes(x=Ano, y=valor, fill=Municipio))+
+  geom_col(position = "dodge")+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Óbitos',
+    title='Óbitos por arma de fogo (2000-2019)', 
+    subtitle = 'Gráfico 17',
+    caption='Fonte: Atlas da Violência - IPEA')
+
+  
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+mortes_arma_tb <- group_by(mortes_arma, Ano, Municipio) %>%
+  summarise(Total=sum(valor))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+mortes_arma_tb <- mortes_arma_tb %>%
+  pivot_wider(names_from = `Municipio`, values_from = Total)
+
+```
+
+
+A tabela abaixo resume os dados apresentados no gráfico. 
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+mortes_arma_tb %>%
+  gt(groupname_col = "Município") %>%
+  tab_header(title = md("**Tabela 2: Nº de óbitos por arma de fogo por ano**")) %>%
+  tab_options(heading.align = "left",
+              column_labels.border.top.color = "black",
+              column_labels.border.top.width = px(4)) %>%
+  cols_align(align = "right", columns = 1:2) %>%
+  tab_source_note(md("**Fonte**: Atlas da Violência - IPEA"))
+  
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mortes_arma_mul <- read.csv("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/bitos-de-mulheres-por-armas-de-fogo.csv", header = TRUE, sep = ";")
+
+mortes_arma_mul <- mortes_arma_mul %>%
+  rename_with(~c("cod","Município","ano","valor"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mortes_arma_mul <- mortes_arma_mul %>%
+  filter(Município %in% c("Ouro Preto", "Mariana", "Itabirito"))
+
+```
+
+## Óbitos de mulheres por arma de fogo (2000-2019)
+
+Mostramos no gráfico e tabela anteriores o número de óbitos por arma de fogo ao longo dos ultimos 20 anos. Nesta parte, destacamos o número de óbitos de mulheres por arma de fogo.
+É possível identificar que entre 2000 a 2007 não houve nenhum óbito de mulher por arma de fogo nas três cidades. Entre 2008 a 2017, ocorreram 11 óbitos por arma de fogo, dos quais dois (02) foram na cidade de Itabirito (18,18%), cinco (05) de Ouro Preto (45,45%) e Mariana quatro (04) (36,36%).
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+ggplot(mortes_arma_mul, aes(x=ano, y=valor, fill=Município))+
+  geom_col(position = "dodge")+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Óbitos',
+    title='Óbitos de mulheres por arma de fogo (2000-2019)', 
+    subtitle = 'Gráfico 18',
+    caption='Fonte: Atlas da Violência - IPEA')
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mortes_arma_hom <- read.csv("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/bitos-de-homens-por-armas-de-fogo.csv", header = TRUE, sep = ";")
+
+mortes_arma_hom <- mortes_arma_hom %>%
+  rename_with(~c("cod","Município","ano","valor"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mortes_arma_hom <- mortes_arma_hom %>%
+  filter(Município %in% c("Ouro Preto", "Mariana", "Itabirito"))
+
+```
+
+## Óbitos de homens por arma de fogo (2000-2019)
+
+Nesta parte, são destacados os registros de óbitos de homens por arma de fogo. Os dados em tela sinalizam uma tendência de crescimento em Mariana. Exceto para os anos de 2003, 2011, 2013 e 2017, Ouro Preto sempre registrou números de óbitos de homens por arma de fogo  menores que as cidades de Mariana e Itabirito.
+
+Na seção seguinte, é dado destaque nestes mesmos dados, mas pela faixa etária entre 15 a 29 anos.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+ggplot(mortes_arma_hom, aes(x=ano, y=valor))+
+  geom_col(aes(fill=Município))+
+  facet_wrap(~Município)+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Óbitos',
+    title='Óbitos de homens por arma de fogo (2000-2019)', 
+    subtitle = 'Gráfico 19',
+    caption='Fonte: Atlas da Violência - IPEA')
+
+  
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mortes_arma_jov <- read.csv("P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/bitos-de-jovens-por-armas-de-fogo.csv", header = TRUE, sep = ";")
+
+mortes_arma_jov <- mortes_arma_jov %>%
+  rename_with(~c("cod","Município","ano","valor"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+mortes_arma_jov <- mortes_arma_jov %>%
+  filter(Município %in% c("Ouro Preto", "Mariana", "Itabirito"))
+
+```
+
+## Óbitos de jovens (15 a 29 anos) por arma de fogo | 2000-2019
+
+Foi apresentado na seção anterior, que o númemro de óbitos por arma de fogo segue numa tendência de crescimento entre os anos 2000 e 2017 (especialmente no município de Mariana), dando primeiros sinais de redução a partir de 2018. Nesta ultima seção, mostramos que esses homicídios são predominantes em homens com idade superior a 29 anos, conforme define o Atlas do Violência (IPEA) e IBGE.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+ggplot(mortes_arma_jov, aes(x=ano, y=(valor)))+
+  geom_col(aes(fill=Município))+
+  facet_wrap(~Município)+
+  theme(legend.position = "right",
+         plot.title = ggplot2::element_text(face = "bold"),
+         plot.subtitle = ggplot2::element_text(face = "italic"),
+         legend.text = ggplot2::element_text(face = "bold"))+
+  labs(
+    x='Ano', 
+    y='Óbitos',
+    title='Óbitos de jovens (15 a 29 anos) por arma de fogo | 2000-2019', 
+  subtitle = 'Gráfico 20',
+    caption='Fonte: Atlas da Violência - IPEA')
+
+```
+
+## Considerações finais
+
+Vimos na primeira parte, que as populações dos municípios vêm crescendo nos últimos anos e que Mariana e Itabirito crescem a taxas maiores (vide inclinação da reta) que Ouro Preto.
+
+Em seguida vimos o que vem a ser o IDHM Educação, sua metodogia de cálculo e tais índices para o Brasil e as três cidades da Região dos Inconfidentes.
+
+No ponto três, nós apresentamos os registros de homicídios entre os anos 2012 a fevereiro de 2022 nos três municípios - foi possível perceber uma tendência de queda quando consideramos as três cidades ao mesmo tempo. 
+Na seção seguinte, passamos a analisar os mesmos dados de homicídios, mas proporcional ao tamanho de cada município. Para isso, fizemos o número de homícidios por 10.000 habitantes. Por essa perspectiva, foi possível identifcar que Mariana e Itabirito registram maiores taxas de homicídios por 10.000 habitantes, sinalizando que tais cidades são mais violentas.
+
+Na seção de registros de lesão corporal e furtos, nós a abrimos dando uma distinção entre furto e roubo, e em seguida, destacamos que os municípios de Ouro Preto e Mariana apresentam maiores registros, e que Ouro Preto fica à frente das demais cidades. 
+
+Na quinta parte e suas respectivas subseções, foram apresentados os registros de violência contra mulher;  Registros de violência contra a mulher por mês (2019-fev-2022) e Vítimas de feminicídio - tentado e consumado. Foi possível constatar que o número de registro de violência contra mulher é mais elevado em Ouro Preto. Porém, enquanto Itabirito e Mariana vêm crescendo o registro, Ouro Preto vem diminuindo. Foi destacado, contudo, que essa redução de registros pode se dar por duas razões: uma política pública de segurança pública (legislação, campanha publicitária ou mesmo mobilização de movimentos civis organizados) - que é o que se espera - ou mesmo casos de subnotificação. Ainda nesta seção, são apresentados esses registros por mês e ano para cada município. Mostramos que, entre 2019 a fevereiro de 2022, o número médio de registros de violência contra mulher, a cada 10 dias, cresceu nos municípios de Itabirito e Mariana, e, em Ouro Preto, esse número reduziu drasticamente. 
+
+Na seção posterior, onde apresentamos os registros de alvo de roubos na Região dos Inconfidentes, observamos que a série considerada, apresenta tendência de queda em todos os alvos de roubo, embora Ouro Preto aprensente um leve crescimento de registros de roubos para os alvos residência, transporte coletivo e transeunte até o ano de 2018.
+
+Na nona parte, onde apresentamos os registros de alvos de furtos, identificamos que os números são expressivamente maiores em todos os alvos, exceto o de cargas, que permanece relativamente semelhante ao de roubos. Outros dois elementos são constatados: a tendência de queda dos furtos, embora em menor proporção que os roubos; e a maior frequência desses crimes para a cidade de Ouro Preto.
+
+Na décima e penúltima partes, mostramos os registros roubos de veículos não coletivos. Constatamos que o número de registro de veículos não coletivo reduziu a partir de 2017 nas três cidades.
+
+Na última parte, que é quando aprensentamos os óbitos por arma de fogo entre os anos de 2000-2019, os dados sinalizam um tendência de crescimento e Mariana lidera esse ranking. Considerando toda a série, foram registrados 239 óbitos por arma de fogo nos três municípios. Desses 239, 67 foram de Itabirito, 107 de Mariana, e 65 de Ouro Preto. Uma média de 11,9 óbitos por ano nas três cidades.
+
+Nas outras subseções, destacamos o quanto desses óbitos por arma de fogo são mulheres, jovens entre 15 a 29 anos e homens. Identificamos que os registros de óbitos de mulheres por arma de fogo ocorreram entre 2008 a 2017. Neste período, foram registrados 11 óbitos, dos quais dois (02) foram na cidade de Itabirito (18,18%), cinco (05) de Ouro Preto (45,45%) e Mariana  quatro (04) (36,36%).
+
+Nas ultimas duas subseções, são apresentados os registros de óbitos de jovens homens com idade entre 15 a 29 anos e homens. Constatamos que, para as três cidades, o número de óbitos por arma de fogo em jovens é menor que para homens.
+
+Por fim, cumpre ressaltar que o que buscou-se sustentar como causa de redução das taxas de criminalidade na cidade de Ouro Preto, de forma suscinta neste relatório é que o melhor desempenho de Ouro Preto, isto é, menores taxas de criminalidade, especialmente as de homicídios, violencia contra mulher e óbitos por arma de fogo, se dão em parte pelo melhor IDHM Educação e Renda per capita, vide a discussão em literatura especializada. Ou seja, tanto IDHM Educação, quanto melhores níveis de renda per capita, impactam negativamente nas taxas de criminalidade, isto é, reduzem.
+
+
+## Referências
+
+- https://biblioteca.ibge.gov.br/visualizacao/livros/liv101849.pdf
+- https://www.ipea.gov.br/atlasviolencia/filtros-series
+- https://www.tjdft.jus.br/institucional/imprensa/campanhas-e-produtos/direito-facil/edicao-semanal/furto-e-roubo
+- http://www.seguranca.mg.gov.br/2018-08-22-13-39-06/dados-abertos
+- http://www.seguranca.mg.gov.br/component/gmg/page/3118-violencia-contra-a-mulher
+- http://www.seguranca.mg.gov.br/images/2021/Setembro/DIAGNSTICO%20-%20VDFCM%20nas%20RISPs%20-%201%20semestre-2021%20-%202021-08-06%201.pdf
+- https://www.teses.usp.br/teses/disponiveis/11/11132/tde-17032011-100958/en.php
+- https://ouropreto.mg.gov.br/static/arquivos/menus_areas/estudos_economicos.pdf?dc=2543
+- https://repositorio.ufpe.br/bitstream/123456789/30934/1/TESE%20Rog%C3%A9rio%20Pereira.pdf
+- http://www.atlasbrasil.org.br/acervo/atlas
