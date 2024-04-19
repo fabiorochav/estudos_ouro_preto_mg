@@ -1,0 +1,830 @@
+---
+title: "Aspectos Econômicos e Sociais da Região dos Inconfidentes"
+subtitle: "**Secretaria de Desenvolvimento Econômico, Inovação e Tecnologia**"
+author: "*Fábio Rocha | Estudos Econômicos* ^[Graduado em Filosofia pela Universidade Federal de Ouro Preto e graduando em ciências econômicas pela Universidade Federal de Ouro Preto. Atua na Diretoria de Estudos Econômicos na Secretaria de Desenvolvimento Econômico, Inovação e Tecnologia de Ouro Preto.]"
+date: "`r format(Sys.time(), '%d de %B, %Y')`"
+output: pdf_document
+---
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+knitr::opts_chunk$set(echo = TRUE)
+def.chunk.hook  <- knitr::knit_hooks$get("chunk")
+knitr::knit_hooks$set(chunk = function(x, options) {
+  x <- def.chunk.hook(x, options)
+  ifelse(options$size != "normalsize", paste0("\\", options$size,"\n\n", x, "\n\n \\normalsize"), x)
+})
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+library(sidrar)
+library(dplyr)
+library(ggrepel)
+library(readxl)
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+library(timetk)
+library(scales)
+
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+pib_inconf <- get_sidra(api="/t/5938/n6/3131901,3140001,3146107/v/37,513,517,525,6575/p/2010,2011,2012,2013,2014,2015,2016,2017,2018,2019/d/v37%200,v513%200,v517%200,v525%200,v6575%200")
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+## Selecionando variaveis, friltrando variável e criando variavel valor menor ##
+
+pib_inconfi <- pib_inconf %>%
+  select(`Valor`,`Variável`,`Ano`,`Município`) %>%
+  filter(Variável == "Produto Interno Bruto a preços correntes") %>%
+  mutate(valor = Valor/1000000)
+  
+```
+
+
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+# Data.frame sobre população dos inconfidentes e renomeação das variáveis #
+
+
+pop_inc <- read_excel("C:/Users/Usuario/Desktop/Acessados/Desenvolvimento_Economico/Codigos2_R/pop_inc.xlsx") %>%
+  rename_with(~c("territorio", "2013","2014", "2015", "2016","2017"))
+
+# transformando nome das variáveis em linha e filtrei apenas municípios #
+
+popul <- pop_inc %>% 
+  pivot_longer(c("2013","2014","2015","2016","2017"), names_to = "Ano", values_to = "N_hab") %>%
+  filter(territorio != "Brasil")
+
+
+```
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+
+# Redefinção de variaveis para o novo data.frame
+
+pib_inc <- subset(pib_inconfi, select = c(Variável, Ano, Município, valor))
+
+
+```
+
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+# Criação da variável PIB per capta 2013 a 2017
+
+pib_inc <- pib_inc %>%
+  filter(Ano %in% c("2013","2014","2015","2016","2017")) %>%
+  mutate(Populac = popul$N_hab) %>%
+  mutate(percapta = valor/Populac)
+
+```
+
+# Resumo:
+
+Este estudo foi desenvolvido com duplo objetivo: (i) identificar características econômicas das cidades de Ouro Preto, Mariana e Itabirito, de modo que seja possível verificar nuances da atividade econômica da Região dos Inconfidentes nos últimos anos. E (ii), apresentar dados relacionados às atividades econômica e social (emprego, comércio e educação) de Ouro Preto. Será possível perceber que transformações substanciais ocorreram nos últimos anos, especialmente no âmbito social. Dessa forma, este material pretende fornecer subsídio adequado às discussões e decisões do executivo, no tocante à formulação de política pública e ao mesmo tempo, servir de consulta pelo setor privado e instituições de pesquisa. Assim, este estudo conta com os seguintes tópicos:
+
+-	Produto Interno Bruto (PIB) – tópico no qual definimos o que é PIB;
+-	PIB dos Municípios;
+-	PIB dos Municípios (2010-2019);
+-	PIB per capita dos Municípios (2013-2017); nesta seção trazemos a evolução do PIB de cada um dos municípios ao longo dos anos;
+-	Valor Adicionado Bruto por setor da economia. Isto é, o quanto cada setor da economia contribui para o PIB de cada município;
+-	Valor Adicionado Bruto por setor da economia
+-	Evolução do número de empregados no setor turístico (ACT’s);
+-	Arrecadação de ISSQN em Ouro Preto (Imposto Sobre Serviços de Qualquer Natureza);
+-	Arrecadação Municipal de Ouro Preto 2020 - atual;
+-	Comércio e outras organizações em Ouro Preto;
+-	Dados educacionais - UFOP e população ouro-pretana;
+-	Escolaridade das pessoas com idade maior ou igual a 16 anos (2020);
+-	Considerações Finais.
+
+# Produto Interno Bruto (PIB)
+
+A medida de PIB de um país ou região representa a produção final (valor adicionado ou valor agregado) de todas as unidades produtoras da economia (empresas públicas e privadas produtoras de bens e prestadoras de serviços, trabalhadores autonomos, governo, etc.), num dado período (ano ou trimestre, em geral) a preços de mercado. 
+
+Produção do ponto de vista das Contas Nacionais:
+
+- produção de bens e serviços voltadas para o mercado;
+- produção de bens e serviços pelo governo e instituições sem fins lucrativos, vendida ou não;
+- produção de bens para autoconsumo das famílias;
+- produção de bens de capital pelas firmas para consumo próprio;
+- produção de serviços pessoais e domésticos quando remunerados;
+- serviços de habitação pelos proprietários ocupantes (imputação de um valor de aluguel às residencias ocupadas pelos proprietários). (Feijó, 2003)
+
+
+# PIB dos Municípios (2010-2019)
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+
+ggplot(pib_inconfi, aes(x=Ano, y=valor, fill = Município))+
+  geom_col(position = "dodge")+
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank(),
+       plot.title = element_text(size=20),
+       plot.caption = element_text(size=11))+
+  labs(x='', y='Bilhões (R$)',
+    title="",
+    subtitle = "",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados do IPEA: http://extrator.ipea.gov.br/')
+
+```
+
+# PIB dos Municípios
+
+Neste recorte observamos, separadamente, o PIB de cada município ao longo dos últimos dez anos. É possível observar um crescimento da produção no município de Itabirito ao longo da série analisada, com algumas recessões nos períodos de 2014, 2015 e 2019. Já em Mariana, o produto vinha crescendo até o final de 2013. Após este ano, esse produto veio caindo, atingindo seus níveis mais baixos em 2016 - ano que coincidentemente é posterior ao mês de novembro, período que houve o rompimento da barragem no subdistrito de Bento Rodrigues. Soma-se a esse fato, variáveis macroeconômicas (câmbio, desemprego, inflação, etc) e instabilidade política - ano de impeachment da ex-presidenta Dilma Rousseff. Já o produto de Ouro Preto é o único que se mostra com crescimento e recuperação rápida - assumindo que ele foi afetado pelas mesmas variáveis que Mariana. Outro ponto a se destacar é que Ouro Preto é o município que tem a maior população entre os três analisados (variável que também exerce influência no tamanho da economia).
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(pib_inconfi, aes(x=Ano, y=valor, fill = Município))+
+  geom_col(position = "dodge")+
+  facet_wrap(~Município)+
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank(),
+       plot.title = element_text(size=20),
+       plot.caption = element_text(size=11))+
+  labs(x='', y='Bilhões (R$)',
+    title="",
+    subtitle = "",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados do IPEA: http://extrator.ipea.gov.br/')
+
+```
+
+
+# PIB per capita dos Municípios (2013-2017)
+
+O PIB per capita é calculado dividindo o PIB do ano pelo número de habitantes do ano do município.
+Com dados disponibilizados pelo Atlas do Desenvolvimento Humano, foi possível identificar as populações de Mariana, Ouro Preto e Itabirito para os anos de 2013 a 2017. Assim, foi possível calcular o PIB per capita apenas para os anos selecionados.
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(pib_inc, aes(x=Ano, y=percapta*1000000, fill = Município))+
+  geom_col(position = "dodge")+
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank(),
+       plot.title = element_text(size=20),
+       plot.caption = element_text(size=11))+
+  labs(x='', y='Mil (R$)',
+    title="",
+    subtitle = "",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados do IPEA: http://extrator.ipea.gov.br/ e Atlas do Desenvolvimento Humano')
+
+```
+
+```{r,echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+# Criando Data.frame de Valor Adicionado por setor #
+
+vab_inc <- pib_inconf %>%
+  select(`Valor`,`Variável`,`Ano`,`Município`) %>%
+  filter(Variável != "Produto Interno Bruto a preços correntes") %>%
+  mutate(valor = Valor/1000000)
+  
+```
+
+```{r,echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+#selecionando variáveis do data.frame (atualizando o dataframe)
+
+vab_inc <- subset(vab_inc, select = c(Variável, Ano, Município, valor))
+  
+```
+
+```{r,echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+
+# substituindo nomes grandes por menones nas variáveis #
+
+
+vab_inc[(vab_inc$Variável) == "Valor adicionado bruto a preços correntes da agropecuária",]$Variável = "VAB Agropecuária"
+
+vab_inc[(vab_inc$Variável) == "Valor adicionado bruto a preços correntes da indústria",]$Variável = "VAB Industria"
+
+vab_inc[(vab_inc$Variável) == "Valor adicionado bruto a preços correntes da administração, defesa, educação e saúde públicas e seguridade social",]$Variável = "VAB adm, def, educ&saude_púb e seg_social "
+
+vab_inc[(vab_inc$Variável) == "Valor adicionado bruto a preços correntes dos serviços, exclusive administração, defesa, educação e saúde públicas e seguridade social",]$Variável = "VAB Serviços "
+
+```
+
+
+# Valor Adicionado Bruto por setor da economia
+
+O Valor Adicionado Bruto (VAB) é o valor que cada setor da economia (agropecuária, indústria e serviços) acresce ao valor final de tudo que foi produzido em uma região (UFSC, 2022). Um exemplo, comparando duas formas de produção de um mesmo bem, ajuda a fixar o conceito de valor adicionado. Num primeiro caso, suponha uma firma que seja integrada verticalmente, ou seja, que produza grande parte dos insumos que utiliza na produção do seu produto final. A contribuição da firma será obtida pelo valor da produção do seu produto final subtraído das compras de insumos feitas às outras firmas. Os insumos que utilizam na produção, mas são de produção própria, não são descontados para o cálculo da contribuição final ao PIB.(Feijó, 2003).
+
+## Em resumo, valor adicionado bruto:
+
+- valor adicionado (ou valor agregado) = (igual) valor do que se produziu - (menos) valor do que se consumiu.
+
+Nesta análise é possível verificar a forte contribuição do setor indústria - necessariamente mineração - no PIB dos três municípios, seguido dos setores serviços e público (administração, saúde, educação, defesa, seguridade). Já o setor Agropecuária, tem baixa participação na economia de todos os três municípios.
+Outro ponto de destaque é o crescimento da participação do setor de serviço nos municípios de Itabirito e Ouro Preto.
+
+
+Outro ponto de destaque é o crescimento da participação do setor de serviço nos municipios de Itabirito e Ouro Preto.
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(vab_inc, aes(x=Ano, y=valor, fill = Município))+
+  geom_col(aes(fill=Variável))+
+  facet_wrap(~Município)+
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank(),
+       plot.title = element_text(size=20),
+       plot.caption = element_text(size=11))+
+  labs(x='', y='Bilhões (R$)',
+    title="",
+    subtitle = "",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados do IPEA: http://extrator.ipea.gov.br/')
+
+```
+
+```{r,echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+emprego_inconfi <- read_excel("emprego_mar_ita.xlsx")
+
+```
+
+```{r,echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+emp_inc <- emprego_inconfi %>%
+  rename_with(~c("Data", "Atividade","Itabirito", "Mariana", "Ouro_Preto")) %>%
+  filter(Atividade != "Transporte Aéreo") %>%
+  filter(Atividade != "Transporte Aquaviário") %>%
+  mutate(dia = "01/") %>%
+  mutate(dia_c = paste(dia, Data))
+
+```
+
+```{r,echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+emprego_inconfi <- emp_inc %>%
+  mutate(data = dmy(emp_inc$dia_c)) %>%
+  mutate(mes = month(data, label = TRUE)) %>%
+  mutate(ano = year(data))
+
+```
+
+```{r,echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+
+emprego_inconfidentes <- subset(emprego_inconfi, 
+                                select = c(data,mes,ano,Atividade,Itabirito,Mariana,Ouro_Preto))
+
+
+```
+
+# Evolução do nº de empregados no setor turístico (ACT's)
+
+Neste último gráfico destacamos a evolução do número de pessoas empregadas no setor turístico para os três municípios. Destacam-se para o município de Ouro Preto, o crescimento na ACT alimentação e alojamento, configurando ainda as atividades que mais empregam pessoas no setor turístico. ACT's (Atividades Características de Turismo)
+
+```{r, echo=F, eval=T, results='asis', fig.width=12, fig.height=11, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(emprego_inconfidentes, aes(x=data))+ 
+  geom_line(aes(y=Mariana, colour="Mariana"), size=.8)+
+  geom_line(aes(y=Itabirito, colour="Itabirito"), size=.8)+
+  geom_line(aes(y=Ouro_Preto, colour="Ouro_Preto"), size=.8)+
+  facet_wrap(~Atividade, scales = "free")+
+  theme(axis.text.x=element_text(angle=65, hjust=1, vjust=1))+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.5, "cm"),
+        legend.title = element_blank(),
+       plot.title = element_text(size=26),
+       plot.caption = element_text(size=11))+
+  labs(x='', y='Nº de empregados',
+    title="ACT's (Atividades Características de Turismo)",
+    subtitle = "",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados do IPEA: http://extrator.ipea.gov.br/')
+
+```
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+arrecada = read_excel("C:/Users/Usuario/Desktop/Acessados/Planilhas/arrecadacao_op.xlsx", skip = 3)
+
+arrec <- arrecada %>%
+  select(`Mês`,"a2020"=`2020`, "a2021"=`2021`,"a2022"=`2022`,"a2019"=`2019`)
+
+
+arrecada <- arrec %>%
+  pivot_longer(c(a2019,a2020,a2021,a2022), 
+                names_to = "Ano", values_to = "Valor")
+
+
+arrec <- arrecada %>% 
+  mutate(ano = (str_sub(Ano, 2))) 
+  
+
+arrecada <- subset(arrec, select = c(ano,Mês,Valor ))
+
+arrecada[(arrecada$Mês) == "JAN",]$Mês = "2020-01-01"
+arrecada[(arrecada$Mês) == "FEV",]$Mês = "2020-02-01" 
+arrecada[(arrecada$Mês) == "MAR",]$Mês = "2020-03-01" 
+arrecada[(arrecada$Mês) == "ABR",]$Mês = "2020-04-01" 
+arrecada[(arrecada$Mês) == "MAI",]$Mês = "2020-05-01" 
+arrecada[(arrecada$Mês) == "JUN",]$Mês = "2020-06-01" 
+arrecada[(arrecada$Mês) == "JUL",]$Mês = "2020-07-01" 
+arrecada[(arrecada$Mês) == "AGO",]$Mês = "2020-08-01" 
+arrecada[(arrecada$Mês) == "SET",]$Mês = "2020-09-01" 
+arrecada[(arrecada$Mês) == "OUT",]$Mês = "2020-10-01" 
+arrecada[(arrecada$Mês) == "NOV",]$Mês = "2020-11-01" 
+arrecada[(arrecada$Mês) == "DEZ",]$Mês = "2020-12-01" 
+
+arrec <- arrecada %>%
+  mutate(data = ymd(Mês)) %>%
+  mutate(mes = month(data, label = TRUE)) %>%
+  mutate(ano = arrecada$ano)
+
+
+arrecada <-  subset(arrec, select = c(mes, ano, Valor))
+
+
+arrecada2019 <- arrecada %>%
+  filter(ano == 2019)
+arrecada2020 <- arrecada %>%
+  filter(ano == 2020)
+arrecada2021 <- arrecada %>%
+  filter(ano == 2021)
+arrecada2022 <- arrecada %>%
+  filter(ano == 2022)
+
+
+arrecadacao_total <- full_join(arrecada2020, arrecada2021)
+arrecadacao_total <- full_join(arrecadacao_total, arrecada2022)
+arrecadacao_total <- full_join(arrecadacao_total, arrecada2019)
+
+```
+
+# Arrecadação Municipal de Ouro Preto 2019-atual
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(arrecada, aes(x=ano, y=Valor/1000000))+
+  geom_col(fill="orange")+
+  theme(axis.text.x=element_text(hjust=0.5, vjust=1))+
+  theme(legend.position = "right",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='Milhões',
+    title="",
+    subtitle = "Preços correntes",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados do Portal Transparência PMOP')
+
+```
+
+Arrecadação dos anos 2019-atual, por mês. O ano de 2020 começa com arrecadações consideráveis, mas com início da pandemia, as arrecadações despencam. Nos meses que sucedem, apesar de ser seguido por um período relativamente extenso do comércio não essencial fechado, as arrecadações voltam a se recuperar. Importante destacar o efeito que o Auxílio Emergencial desempenhou nesse mesmo período, somado aos repasses do Governo Federal para o combate a pandemia.  
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(arrecadacao_total, aes(x=mes, y=Valor/1000000, group=1))+ 
+  geom_line(color="blue", size=1.6)+
+  geom_point(color="orange", size=1.8)+
+  facet_wrap(~ano)+
+  theme(axis.text.x=element_text( hjust=1, vjust=1))+
+  theme(legend.position = "right",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank(),
+        plot.title = element_text(size=26))+
+  labs(x='', y='Milhões',
+    title="Arrecadação municipal de Ouro Preto (2019-2022)",
+    subtitle = "Preços correntes",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados do Portal Transparência PMOP')
+
+```
+
+# Arrecadação de ISSQN em Ouro Preto (Imposto Sobre Serviços de Qualquer Natureza)
+
+Nesta seção apresentamos a participação que cada atividade do setor serviços contribui com o imposto Sobre Serviços de Qualquer Natureza. Em nosso processo de tratamento de dados foi necessário reduzir as variáveis a nomes menores, conforme consta abaixo:
+
+- (Data) Mês,
+- (Tecnologia) Serviços de informática e congêneres,
+- (PeD) Serviços de pesquisas e desenvolvimento de qualquer natureza.,
+- (Locação) Serviços prestados mediante locação, cessão de direito de uso e congêneres,
+- (Saúde) Serviços de saúde, assistência médica e congêneres,
+- (Veterinária) Serviços de medicina e assistência veterinária e congêneres,
+- (Estética) Serviços de cuidados pessoais, estética, atividades físicas e congêneres,
+- (Engenharia) Serviços relativos a engenharia, arquitetura, geologia, urbanismo, construção civil, manutenção, limpeza, meio ambiente, saneamento e congêneres.,
+- (Educação) Serviços de educação, ensino, orientação pedagógica e educacional, instrução, treinamento e avaliação pessoal de qualquer grau ou natureza,
+- (Hospedagem) Serviços relativos a hospedagem, turismo, viagens e congêneres,
+- (Intermediação) Serviços de intermediação e congêneres,
+- (Estacionamento_vigilância) Serviços de guarda, estacionamento, armazenamento, vigilância e congêneres,
+- (Entretenimento) Serviços de diversões, lazer, entretenimento e congêneres,
+- (Fotografia) Serviços relativos a fonografia, fotografia, cinematografia e reprografia,
+- (Terceiros) Serviços relativos a bens de terceiros,
+- (Bancário) Serviços relacionados ao setor bancário ou financeiro, inclusive aqueles prestados por instituições financeiras autorizadas a funcionar pela União ou por quem de direito,
+- (Transporte_pub) Serviços de transporte de natureza municipal,
+- (Administrativo) Serviços de apoio técnico, administrativo, jurídico, contábil, comercial e congêneres,
+- (Jogos) Serviços de distribuição e venda de bilhetes e demais produtos de loteria, bingos, cartões, pules ou cupons de apostas, sorteios, prêmios, inclusive os decorrentes de títulos de capitalização e congêneres,
+- (Portuários) Serviços portuários, aeroportuários, ferroportuários, de terminais rodoviários, ferroviários e metroviários,
+- (Cartórios) Serviços de registros públicos, cartorários e notariais,
+- (Comunicação) Serviços de programação e comunicação visual, desenho industrial e congêneres,
+- (Copiadora) Serviços de chaveiros, confecção de carimbos, placas, sinalização visual, banners, adesivos e congêneres,
+- (Funerária) Serviços funerários,
+- (Fretes) Serviços de coleta, remessa ou entrega de correspondências, documentos, objetos, bens ou valores, inclusive pelos correios e suas agências franqueadas; courrier e congêneres,
+- (Assis_Social) Serviços de assistência social,
+- (Avaliação) Serviços de avaliação de bens e serviços de qualquer natureza,
+- (Bio_qui) Serviços de biologia, biotecnologia e química,
+- (Edif_ele_mec) Serviços técnicos em edificações, eletrônica, eletrotécnica, mecânica, telecomunicações e congêneres,
+- (Desen_tec) Serviços de desenhos técnicos,
+- (Despachante) Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres,
+- (Jornalismo) Serviços de reportagem, assessoria de imprensa, jornalismo e relações-públicas,
+- (Atletas) Serviços de artistas, atletas, modelos e manequins,
+- (Museologia) Serviços de museologia,
+- (Ourivesaria) Serviços de ourivesaria e lapidação,
+- (Obra_arte) Serviços relativos a obras de arte sob encomenda.
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+issqn <- read_excel("Arrecadação_ISSQN_2018_2022.xlsx")
+
+issqn4 <- issqn %>% 
+  select(`Data` = "Mês",
+         `Tecnologia` = "Serviços de informática e congêneres",
+         `PeD` = "Serviços de pesquisas e desenvolvimento de qualquer natureza.", 
+         `Locação` = "Serviços prestados mediante locação, cessão de direito de uso e congêneres",
+         `Saúde` = "Serviços de saúde, assistência médica e congêneres",
+         `Veterinária`= "Serviços de medicina e assistência veterinária e congêneres",
+         `Estética` = "Serviços de cuidados pessoais, estética, atividades físicas e congêneres",	
+         `Engenharia` = "Serviços relativos a engenharia, arquitetura, geologia, urbanismo, construção civil, manutenção, limpeza, meio ambiente, saneamento e congêneres.",
+         `Educação` = "Serviços de educação, ensino, orientação pedagógica e educacional, instrução, treinamento e avaliação pessoal de qualquer grau ou natureza.",
+         `Hospedagem` = "Serviços relativos a hospedagem, turismo, viagens e congêneres.",
+         `Intermediação` = "Serviços de intermediação e congêneres",
+         `Estacionamento_vigilancia` = "Serviços de guarda, estacionamento, armazenamento, vigilância e congêneres.",
+         `Entretenimento` = "Serviços de diversões, lazer, entretenimento e congêneres",
+         `Fotografia` = "Serviços relativos a fonografia, fotografia, cinematografia e reprografia.",
+         `Terceiros` = "Serviços relativos a bens de terceiros.",
+         `Bancário` = "Serviços relacionados ao setor bancário ou financeiro, inclusive aqueles prestados por instituições financeiras autorizadas a funcionar pela União ou por quem de direito.",
+         `Transporte_pub` = "Serviços de transporte de natureza municipal.",
+         `Administrativo` = "Serviços de apoio técnico, administrativo, jurídico, contábil, comercial e congêneres.",
+         `Jogos` = "Serviços de distribuição e venda de bilhetes e demais produtos de loteria, bingos, cartões, pules ou cupons de apostas, sorteios, prêmios, inclusive os decorrentes de títulos de capitalização e congêneres",	
+         `Portuários` = "Serviços portuários, aeroportuários, ferroportuários, de terminais rodoviários, ferroviários e metroviários",
+         `Cartórios` = "Serviços de registros públicos, cartorários e notariais.",
+         `Comunicação` = "Serviços de programação e comunicação visual, desenho industrial e congêneres.",
+         `Copiadora` = "Serviços de chaveiros, confecção de carimbos, placas, sinalização visual, banners, adesivos e congêneres",
+         `Funerária` = "Serviços funerários.",	
+         `Fretes` = "Serviços de coleta, remessa ou entrega de correspondências, documentos, objetos, bens ou valores, inclusive pelos correios e suas agências franqueadas; courrier e congêneres",
+         `Assis_Social` = "Serviços de assistência social.",
+         `Avaliação` = "Serviços de avaliação de bens e serviços de qualquer natureza.",
+         `Bio_qui` = "Serviços de biologia, biotecnologia e química.",	
+         `Edif_ele_mec`= "Serviços técnicos em edificações, eletrônica, eletrotécnica, mecânica, telecomunicações e congêneres",
+         `Desen_tec` = "Serviços de desenhos técnicos.",
+         `Despachante`= "Serviços de desembaraço aduaneiro, comissários, despachantes e congêneres.",
+         `Jornalismo` = "Serviços de reportagem, assessoria de imprensa, jornalismo e relações públicas.",
+         `Atletas` = "Serviços de artistas, atletas, modelos e manequins.", 
+         `Museologia` = "Serviços de museologia",
+         `Ourivesaria` = "Serviços de ourivesaria e lapidação.",
+         `Obra_arte` = "Serviços relativos a obras de arte sob encomenda.")
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+
+
+issqn2 <- issqn4 %>% 
+  pivot_longer(c("Tecnologia","PeD","Locação","Saúde","Veterinária","Estética","Engenharia","Educação", "Hospedagem", "Intermediação","Estacionamento_vigilancia", "Entretenimento", "Fotografia","Terceiros","Bancário", "Transporte_pub","Administrativo", "Jogos",	"Portuários", "Cartórios", "Comunicação", "Copiadora","Funerária","Fretes",  "Assis_Social", "Avaliação","Bio_qui","Edif_ele_mec", "Desen_tec","Despachante","Jornalismo","Atletas", "Museologia", "Ourivesaria","Obra_arte"), names_to = "Serviço", values_to = "Valor")
+
+```
+
+
+## Atividades do setor serviço e contribuições ISSQN (2018-fev2022)
+
+Conforme mostra o gráfico abaixo, as atividades econômicas que tiveram maior peso para arrecadação do ISSQN do município foram: (Engenharia) Serviços relativos a engenharia, arquitetura, geologia, urbanismo, construção civil, manutenção, limpeza, meio ambiente, saneamento e congêneres; (Tecnologia) Serviços de informática e congêneres; (Saúde) Serviços de saúde, assistência médica e congêneres; (Transporte_pub) Serviços de transporte de natureza municipal; (Hospedagem) Serviços relativos a hospedagem, turismo, viagens e congêneres; (Terceiros) Serviços relativos a bens de terceiros; (Bancário) Serviços relacionados ao setor bancário ou financeiro, inclusive aqueles prestados por instituições financeiras autorizadas a funcionar pela União ou por quem de direito; (Administrativo) Serviços de apoio técnico, administrativo, jurídico, contábil, comercial e congêneres.
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=6, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(issqn2, aes(x=Serviço, y=Valor/1000000))+
+  geom_bar(stat = 'identity')+
+  coord_flip()+
+  theme(axis.text.x=element_text(angle=45,hjust=1, vjust=1))+
+  theme(legend.position = "right",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='Milhões de R$',
+    title="",
+    subtitle = "",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da Secretaria Municipal de Fazenda de Ouro Preto')
+
+```
+
+## Evolução da arrecadação das atividades com maior peso. (2018-fev2022)
+
+Outro ponto de destaque é como as arrecadações dos principais setores evoluíram ao longo dos últimos três anos. Destacamos, em especial, o crescimento da arrecadação da atividade “Tecnologia”.
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(issqn4, aes(x=as.Date(Data)))+
+  geom_line(aes(y=Engenharia/1000, colour="Engenharia"), size=.8)+
+  geom_line(aes(y=Administrativo/1000, colour="Administrativo"), size=.8)+
+  geom_line(aes(y=Bancário/1000, colour="Bancário"), size=.8)+
+  geom_line(aes(y=Hospedagem/1000, colour="Hospedagem"), size=.8)+
+  geom_line(aes(y=Saúde/1000, colour="Saúde"), size=.8)+
+  geom_line(aes(y=Tecnologia/1000, colour="Tecnologia"), size=2.8)+
+  geom_line(aes(y=Terceiros/1000, colour="Terceiros"), size=.8)+
+  geom_line(aes(y=Transporte_pub/1000, colour="Transporte_pub"), size=.8)+
+  scale_x_date(breaks = date_breaks("1 year"),
+               labels = date_format("%Y"))+
+  theme(axis.text.x=element_text(hjust=1, vjust=1))+
+  theme(legend.position = "right",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='Mil reais',
+    title="",
+    subtitle = "",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da Secretaria Municipal de Fazenda de Ouro Preto')
+
+```
+
+Nossa hipótese é de que esse crescimento na arrecadação da atividade tecnologia se deve, em parte, pelo ambiente institucional estabelecido no município em 2018. Neste ano, 2018, o município aprovou uma Lei de Incentivo Fiscal¹ para as atividades relacionadas à tecnologia. Entre os principais incentivos estão o ISSQN de 2% (o menor de todas as atividades na Lei do ISSQN) e a isenção de IPTU para os próximos 10 anos. Um resultado preliminar que pode ser observado é o crescimento anual. Comparando o que foi arrecadado entre maio de 2018 e o ano de 2019, a atividade aumentou a contribuição em 18,8%. Quando comparamos os anos 2019 e 2020, o crescimento foi ainda maior, 21,4%. E no último ano, 2020 e 2021 a arrecadação cresceu mais 34%.
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(issqn4, aes(x=as.Date(Data), y=Tecnologia/1000, group=1))+
+  geom_line(color="blue", size=1.3)+
+  scale_x_date(breaks = date_breaks("1 year"),
+               labels = date_format("%Y"))+
+  theme(axis.text.x=element_text(hjust=0.5, vjust=1))+
+  theme(legend.position = "right",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='Mil reais',
+    title="(Tecnologia) Serviços de informática e congêneres",
+    subtitle = "",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da Secretaria Municipal de Fazenda de Ouro Preto')
+
+```
+
+
+## Evolução da arrecadação por atividade 2018-fev2022
+
+```{r, echo=F, eval=T, results='asis', fig.width=12, fig.height=15, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(issqn2, aes(x=as.Date(Data), y=Valor/1000, group=1))+
+  geom_col()+
+  scale_x_date(breaks = date_breaks("1 year"),
+               labels = date_format("%Y"))+
+  facet_wrap(~Serviço, scale="free", ncol=3, nrow=13)+
+  theme(axis.text.x=element_text(hjust=1, vjust=1))+
+  theme(legend.position = "right",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='Mil reais',
+    title="",
+    subtitle = "",
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados da Secretaria Municipal de Fazenda de Ouro Preto')
+
+```
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+df = get_sidra(api="/t/993/n6/3146107/v/allxp/p/last%2010/c12762/allxt/c319/0,7823,7824,7825,7827,7828,96894,99734,101226/c12386/allxt")
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+df2 <- df %>%
+  select(`Variável`,
+        "Ano" = `Ano`,
+        "CNAE" = `Classificação Nacional de Atividades Econômicas (CNAE 2.0)`,
+        "Pessoal_ocupado" = `Faixas de pessoal ocupado`,
+        "Fundacao" = `Ano de fundação`,
+        "Valor" = `Valor`) %>%
+filter(Pessoal_ocupado != "Total")
+
+```
+
+
+# Comércio e outras organizações em Ouro Preto
+
+## Nº de empresas e outras organizações cadastradas em Ouro Preto
+
+Nesta oitava seção apresentamos o número de empresas e organizações cadastradas no município entre os anos de 2010 a 2019. Observamos uma alta participação das empresas e organizações de pequeno porte que contam com 0 a 4 pessoas e 5 a 9.
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(df2, aes(x=Ano, y= Valor)) +
+geom_col(aes(fill = Pessoal_ocupado))+
+         #position = position_stack(reverse = TRUE))+
+  labs(
+    x='', 
+    y='Empresas cadastradas e pessoal ocupado',
+    title='', 
+    subtitle = '',
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados do IBGE - Cadastro Central de Empresas')
+
+```
+
+
+## Nº de empresas e outras organizações por atividade (CNAE 2.0)
+
+Neste subtópico apresentamos as atividades de acordo com a Classificação Nacional de Atividades Econômicas (CNAE 2.0), que as empresas cadastradas no município desempenham. Verifica-se que a atividade que tem maior número de empresas cadastradas é o *comércio* e *reparação de veículos automotores e motocicletas*.
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(df2, aes(x=Ano, y= Valor)) +
+geom_col(aes(fill = CNAE))+
+  theme(legend.position = "right",
+  legend.key.size = unit(0.5, "cm"),
+  legend.title = element_blank())+
+  theme(axis.text.x=element_text( hjust=1, vjust=1))+
+  labs(
+    x='', 
+    y='Empresas cadastradas',
+    title='', 
+    subtitle = '',
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados do IBGE - Cadastro Central de Empresas')
+
+```
+
+## Nº de empresas e outras organizações por atividade economica X pessoal (2010-2019)
+
+Nesta parte apresentamos o número de pessoas empregadas por setor de atividade nos ultimos dez ano, mas por uma outra perspectiva. Verificamos, mais uma vez, que empresas e organizações que contam com 0 a 4 e 5 a 9 pessoas são a maioria no município, destacando a atividade de *comércio* e *reparação de veículos automotores e motocicletas*.
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+ggplot(df2, aes(x=Pessoal_ocupado, y=Valor )) +
+geom_col(aes(fill = CNAE))+
+  theme(legend.position = "right",
+  legend.key.size = unit(0.5, "cm"),
+  legend.title = element_blank())+
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  labs(
+    x='Número de pessoas ou funcionários', 
+    y='Empresas cadastradas',
+    title='', 
+    subtitle = '',
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados do IBGE - Cadastro Central de Empresas')
+
+```
+
+
+## Nº de empresas e outras organizações por ano de fundação e pessoal
+
+Observamos na última parte desta seção que os anos compreendidos entre 1981 a 2003 foram os anos em que houve maior número de fundação de empresas e, novamente, que contam com 0 a 4 pessoas ou 5 a 9. Entre 2004 a 2010, o número de empresas fundadas segue num ritmo de estabilização e nos anos seguintes diminui.
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'} 
+
+
+ggplot(df2, aes(x=Fundacao, y=Valor,)) +
+geom_col(aes(fill=Pessoal_ocupado))+
+  theme(legend.position = "top",
+  legend.key.size = unit(0.5, "cm"),
+  legend.title = element_blank())+
+  theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1))+
+  labs(
+    x='Ano de fundação', 
+    y='Número de empresas ou organizações',
+    title='', 
+    subtitle = '',
+    caption='Fonte: Secretaria de Desenvolvimento Economico, Inovação e Tecnologia com dados do IBGE - Cadastro Central de Empresas')
+
+```
+
+
+```{r,echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+
+diplomado <- read.csv("C:/Users/Usuario/Downloads/graduacao_diplomados.csv", sep = ";", head = TRUE)
+
+ingressante <- read.csv("C:/Users/Usuario/Downloads/ingressantes-2000.1-2017.2.csv", sep = ";", head = TRUE)
+
+evasao <- read.csv("C:/Users/Usuario/Downloads/graduacao_evadidos.csv", sep = ";", head = TRUE)
+
+diplomado <- diplomado %>%
+  filter(unidade_academica != "REITORIA") %>%
+  filter(unidade_academica != "ESCOLA DE EDUCACAO FISICA")
+
+
+
+```
+
+
+```{r,echo=FALSE, eval=TRUE, warning=FALSE, message=FALSE}
+
+
+diplomado$ano <- as.character(diplomado$ano)
+
+diplomado$semestre <- as.character(diplomado$semestre)
+
+
+``` 
+
+# Dados educacionais - UFOP e população ouro-pretana
+
+Entre 2000 a 2019, a Universidade formou 27932 alunos das mais variadas áreas do conhecimento. Os dados abaixo resumem a quantidade de alunos que a Universidade Federal de Ouro Preto formou ao longo dos últimos vinte anos, por semestre e unidade acadêmica. Os principais destaques são o número de formandos nos cursos de engenharias (Escola de Minas), Escola de Medicina, Instituto de Ciências Exatas e Aplicadas (Campus João Monlevade) com crescimento nos últimos anos, e a Escola de Direito, Turismo e Museologia.
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=8, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(diplomado, aes(x=ano))+ 
+  geom_col(aes(fill=semestre, y=diplomados))+
+  facet_wrap(~unidade_academica, ncol=3, scales = "free")+
+  theme(axis.text.x=element_text(angle=65, hjust=1, vjust=1))+
+  theme(legend.position = "top",
+       legend.key.size = unit(0.3, "cm"),
+       legend.title = element_text(),
+       plot.title = element_text(size=20),
+       plot.caption = element_text(size=11))+
+  
+  labs(x='', y='Nº de diplomados',
+    title="Nº de diplomados por Unidade Acadêmica",
+    subtitle = "Universidade Federal de Ouro Preto",
+    caption='Fonte:Secretaria de Desenvolvimento Econômico, Inovação e Tecnologia com dados da UFOP')
+
+```
+
+Entretanto, apesar de a Universidade formar muitos profissionais todo semestre, os dados sinalizam que esses profissionais não tem tido interesse, ou no dizer econômico, não tem recebido os incentivos adequados para permanecerem na cidade após sua formação. Isso porque de acordo com o TSE - com dados da última eleição (2020), pouco mais de 2500 pessoas em Ouro Preto possuem ensino superior. Ao mesmo tempo, o número de pessoas com ensino fundamental incompleto é de 28% da população ouro-pretana, seguido de 29% e 23% para Mariana e Itabirito, respectivamente.
+
+Esses dados sinalizam que, embora a Universidade tenha cumprido seu papel social de produção de conhecimento e formação de cidadãos e cidadãs, há muito trabalho a se fazer no tocante da educação pública, da base ao superior, e aos estímulos que setores estratégicos (público e privado) precisam sistematicamente organizar, visando ampliar o leque de oportunidades da população no sentido de alcançarmos o desejado desenvolvimento econômico da cidade e da Região dos Inconfidentes.
+
+```{r, echo=F, eval=T, warning=FALSE, message=FALSE}
+
+tse <- read.csv("C:/Users/Usuario/Desktop/Acessados/Desenvolvimento_Economico/codigos_R/perfil_eleitorado_2020.csv", sep = ';', header = T)
+
+```
+
+```{r, echo=F, eval=T, warning=FALSE, message=FALSE}
+
+perfil <- tse %>%
+  select(`NM_MUNICIPIO`,`DS_GENERO`,
+         `DS_FAIXA_ETARIA`,`DS_ESTADO_CIVIL`,`DS_GRAU_ESCOLARIDADE`,`QT_ELEITORES_PERFIL`) %>%
+  filter(NM_MUNICIPIO %in% c("OURO PRETO", "ITABIRITO", "MARIANA")) %>%
+  filter(DS_GENERO != "NÃO INFORMADO")
+
+
+```
+
+# Escolaridade das pessoas com idade maior ou igual a 16 anos (2020)
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(perfil, aes(x=DS_GRAU_ESCOLARIDADE, y=QT_ELEITORES_PERFIL))+
+  geom_bar(stat = 'identity')+
+  coord_flip()+
+  geom_col(aes(fill=DS_GENERO))+
+  facet_wrap(~ NM_MUNICIPIO)+
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank(),
+       plot.title = element_text(size=20),
+       plot.caption = element_text(size=11))+
+  labs(x='', y='',
+       title="",
+       subtitle = '',
+       caption='Fonte:Secretaria de Desenvolvimento Econômico, Inovação e Tecnologia com dados do TSE')
+
+```
+
+```{r, echo=F, eval=T, warning=FALSE, message=FALSE}
+
+FUND_INC <- tse %>%
+  select(`NM_MUNICIPIO`,`DS_GENERO`,
+         `DS_FAIXA_ETARIA`,`DS_ESTADO_CIVIL`,`DS_GRAU_ESCOLARIDADE`,`QT_ELEITORES_PERFIL`) %>%
+  filter(NM_MUNICIPIO %in% c("ITABIRITO")) %>%
+  filter(DS_GENERO != "NÃO INFORMADO") %>%
+  filter(DS_GRAU_ESCOLARIDADE == "ENSINO FUNDAMENTAL INCOMPLETO")
+
+
+```
+
+# Considerações Finais
+
+Este estudo foi elaborado com o propósito de identificar alguns elementos importantes da economia da Região dos Inconfidentes e de forma mais detalhada, de Ouro Preto. Nas primeiras três partes nós apresentamos uma definição do que seja PIB e o PIB das três cidades. Em seguida apresentamos o peso que cada setor da economia tem na formação do PIB, ficando explícito o tamanho que a indústria (mineração) desempenha nas três economias.
+
+Não resta dúvida que o setor agropecuária nos três municípios precisa receber mais atenção tanto setor público quanto privado. Conforme dados disponibilizados pelo IBGE Cidades, em 2019, menos de 1% (0,69%) da atividade econômica de Ouro Preto era voltada para atividade agropecuária; para as cidades Marina e Itabirito temos 0,76% e 0,18%, respectivamente. Esse setor precisa de maior atenção porque, além do setor ser responsável por gerar emprego e renda para as famílias de cada um desses municípios, ele é responsável por colocar comida de qualidade na mesa dos munícipes da Região dos Inconfidentes. 
+
+Soma-se a isso, o fato de que está em curso no município um Plano de Apoio a Diversificação Econômica - PADE, que tem como propósito, no médio e longo prazo, alcançar independência da mineração, isto é, ter como uma economia mais diversificada e mais sustentável.
+
+Na seção logo em seguida destacamos o tamanho de cada Atividade Característica do Turismo (ACT’s) na economia da Região dos Inconfidentes. É nítido como a atividade de alimentação em Ouro Preto cresceu entre os anos 2012 a 2019, certamente um aumento do número de empreendimentos ligado a lanches, bebidas e restaurantes. Ao mesmo tempo, é possível verificar a participação do setor de alojamento, com crescimentos percentuais pouco relevante. Estas ambas atividades, na série considerada, foram as maiores empregadoras no setor de turístico.
+
+Nas duas seções posteriores apresentamos os valores de arrecadação no Município de Ouro Preto nos anos 2019-atual. Dois fatos são observados: a arrecadação segue num ritmo de crescimento, e por outro lado, com exceção de 2021, as arrecadações têm variações, entre meses, relativamente alta. Importante destacar que 2020 foi o ano em que no Brasil e no mundo foi deflagrada situação de pandemia. Isso afetou profundamente a atividade econômica e, consequentemente, a arrecadação.
+
+Ao mesmo tempo, como demonstramos na seção oito, a atividade de tecnologia vem crescendo sua participação com os tributos de ISSQN, em parte, por hipótese, como efeito da Lei de Incentivo Fiscal. Outras atividades, como engenharia, transporte público, saúde e administração também representam uma grande fatia dessa arrecadação.
+
+Outro ponto que destacamos neste estudo foi a alta participação que empresas e organizações com 0 a 4 pessoas e 5 a 9 pessoas desempenham na economia de Ouro Preto. Os setores de serviço, de acordo com o CNAE, que tem maior número de empresas cadastradas, é o comércio e oficinas de manutenção de veículos e motocicletas.
+
+Por fim, nós fechamos o estudo apresentando dados relacionados ao número de estudantes que se formaram na Universidade Federal de Ouro Preto ao longo dos últimos vinte anos, por unidade acadêmica. Concluímos que a universidade formou mais de 27 mil alunos das mais variadas áreas do conhecimento, mas que poucos destes profissionais, aparentemente, tem permanecido na cidade, haja vista os dados do TSE no que tange grau de escolaridade da população ouro-pretana.
