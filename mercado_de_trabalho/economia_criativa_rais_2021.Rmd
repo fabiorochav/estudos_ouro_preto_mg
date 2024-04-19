@@ -1,0 +1,828 @@
+---
+title: "Estimativa de empregos formais em Economia Criativa"
+date: "`r format(Sys.time(), '%d de %B, %Y')`"
+subtitle: '**Secretaria de Desenvolvimento Econômico, Inovação e Tecnologia**'
+abstract: "Este relatório propõe fazer um exercício de estimação do estoque de trabalho das atividades econômicas ligadas a *Economia Criativa* de Ouro Preto. Como forma de caracterizar as atividades econômicas da Economia Criativa utilizamos um estudo do IPEA publicado em 2013, intitulado Panorama da Economia Criativa no Brasil. Os dados, igualmente ao estudo do IPEA, para estimação dos empregos formais em economia criativa (estoque de trabalho) são os dados da Rais (Relação Anual de Informação Social), disponibilizado pelo Ministério do Trabalho. Os dados sinalizam um crescimento do número de empregos na economia criativa a partir de 2018 depois de um periodo de queda (2015-2018). Em termos percentuais, os empregos em economia criativa saltaram 113,7% de 2018 a 2021"
+output:
+  pdf_document:
+    toc: true
+    number_sections: true
+    includes:
+      in_header: header.tex
+header-includes:
+- \renewcommand{\contentsname}{}
+- \renewcommand{\abstractname}{Resumo}
+fontsize: 12pt
+---
+
+```{r echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+library(readr)
+library(tidyverse)
+library(lubridate)
+library(stringr)
+library(readxl)
+library(gt)
+library(glue)
+library(readr)
+library(dplyr)
+
+```
+
+```{r setup, include=FALSE}
+
+rais_vinc <- read.csv("RAIS_DADOS.csv", sep = ",", header = TRUE)
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+rais_vinc <- rais_vinc %>%
+  filter(ano %in% c("2005","2006","2007","2008", "2009", "2010", "2011", "2012", "2013", "2014","2015", "2016", "2017", "2018", "2019", "2020","2021"))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+rais_selec <- rais_vinc %>%
+  select(ano,
+         valor_remuneracao_media,
+         faixa_remuneracao_media_sm,
+         idade,
+         grau_instrucao_apos_2005,
+         sexo,
+         indicador_portador_deficiencia,
+         tipo_vinculo,
+         tempo_emprego,
+         quantidade_horas_contratadas,
+         faixa_etaria,
+         valor_salario_contratual,
+         tipo_deficiencia,
+         raca_cor,
+         cnae_2)
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+rais_selec$grau_instrucao_apos_2005[rais_selec$grau_instrucao_apos_2005 == 1] <- "Analfabeto"
+rais_selec$grau_instrucao_apos_2005[rais_selec$grau_instrucao_apos_2005 == 2] <- "Até 5º Incompleto"
+rais_selec$grau_instrucao_apos_2005[rais_selec$grau_instrucao_apos_2005 == 3] <- "5º Completo"
+rais_selec$grau_instrucao_apos_2005[rais_selec$grau_instrucao_apos_2005 == 4] <- "6º a 9º"
+rais_selec$grau_instrucao_apos_2005[rais_selec$grau_instrucao_apos_2005 == 5] <- "Fundamental Completo"
+rais_selec$grau_instrucao_apos_2005[rais_selec$grau_instrucao_apos_2005 == 6] <- "Médio Incompleto"
+rais_selec$grau_instrucao_apos_2005[rais_selec$grau_instrucao_apos_2005 == 7] <- "Médio Completo"
+rais_selec$grau_instrucao_apos_2005[rais_selec$grau_instrucao_apos_2005 == 8] <- "Superior Incompleto"
+rais_selec$grau_instrucao_apos_2005[rais_selec$grau_instrucao_apos_2005 == 9] <- "Superior Completo"
+rais_selec$grau_instrucao_apos_2005[rais_selec$grau_instrucao_apos_2005 == 10] <- "Mestrado"
+rais_selec$grau_instrucao_apos_2005[rais_selec$grau_instrucao_apos_2005 == 11] <- "Doutorado"
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+rais_selec$sexo[rais_selec$sexo == 1] <- "Masculino"
+rais_selec$sexo[rais_selec$sexo == 2] <- "Feminino"
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 10] <- "CLT U/PJ IND"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 30] <- "ESTATUTARIO"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 25] <- "CLT R/PF IND"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 15] <- "CLT U/PF IND"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 35] <- "ESTAT N/EFET"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 60] <- "CLT U/PJ DET"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 20] <- "CLT R/PJ IND"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 80] <- "DIRETOR"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 75] <- "CLT R/PF DET"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 31] <- "ESTAT RGPS"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 55] <- "APREND CONTR"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 65] <- "CLT U/PF DET"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 90] <- "CONT PRZ DET"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 40] <- "AVULSO"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 50] <- "TEMPORARIO"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 97] <- "CONT LEI MUN"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 96] <- "CONT LEI EST"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 95] <- "CONT TMP DET"
+rais_selec$tipo_vinculo[rais_selec$tipo_vinculo == 70] <- "CLT R/PJ DET"
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+rais_selec$raca_cor[rais_selec$raca_cor == 1] <- "Indígena"
+rais_selec$raca_cor[rais_selec$raca_cor == 2] <- "Branca"
+rais_selec$raca_cor[rais_selec$raca_cor == 4] <- "Preta"
+rais_selec$raca_cor[rais_selec$raca_cor == 6] <- "Amarela"
+rais_selec$raca_cor[rais_selec$raca_cor == 8] <- "Parda"
+rais_selec$raca_cor[rais_selec$raca_cor == 9] <- "Não identificado"
+
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 0] <- "Até 0,5 SM"
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 1] <- "0,51 a 1 SM"
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 2] <- "1,01 a 1,5 SM"
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 3] <- "1,51 a 2 SM"
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 4] <- "2,01 a 3 SM"
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 5] <- "3,01 a 4 SM"
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 6] <- "4,01 a 5 SM"
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 7] <- "5,01 a 7 SM"
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 8] <- "7,01 a 10 SM"
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 9] <- "10,01 a 15 SM"
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 10] <- "15,01 a 20 SM"
+rais_selec$faixa_remuneracao_media_sm[rais_selec$faixa_remuneracao_media_sm == 11] <- "Mais de 20 SM"
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+rais_selec <- rais_selec %>%
+  mutate(div_cnae_2 = str_sub(cnae_2,0,-4))
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "1"] <- "AGRICULTURA, PECUÁRIA E SERVIÇOS RELACIONADOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "2"] <- "PRODUÇÃO FLORESTAL"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "3"] <- "PESCA E AQÜICULTURA"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "5"] <- "EXTRAÇÃO DE CARVÃO MINERAL"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "6"] <- "EXTRAÇÃO DE PETRÓLEO E GÁS NATURAL"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "7"] <- "EXTRAÇÃO DE MINERAIS METÁLICOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "8"] <- "EXTRAÇÃO DE MINERAIS NÃO-METÁLICOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "9"] <- "ATIVIDADES DE APOIO À EXTRAÇÃO DE MINERAIS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "10"] <- "FABRICAÇÃO DE PRODUTOS ALIMENTÍCIOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "11"] <- "FABRICAÇÃO DE BEBIDAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "12"] <- "FABRICAÇÃO DE PRODUTOS DO FUMO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "13"] <- "FABRICAÇÃO DE PRODUTOS TÊXTEIS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "14"] <- "CONFECÇÃO DE ARTIGOS DO VESTUÁRIO E ACESSÓRIOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "15"] <- "PREPARAÇÃO DE COUROS E FABRICAÇÃO DE ARTEFATOS DE COURO, ARTIGOS PARA VIAGEM E CALÇADOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "16"] <- "FABRICAÇÃO DE PRODUTOS DE MADEIRA"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "17"] <- "FABRICAÇÃO DE CELULOSE, PAPEL E PRODUTOS DE PAPEL"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "18"] <- "IMPRESSÃO E REPRODUÇÃO DE GRAVAÇÕES"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "19"] <- "FABRICAÇÃO DE COQUE, DE PRODUTOS DERIVADOS DO PETRÓLEO E DE BIOCOMBUSTÍVEIS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "20"] <- "FABRICAÇÃO DE PRODUTOS QUÍMICOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "21"] <- "FABRICAÇÃO DE PRODUTOS FARMOQUÍMICOS E FARMACÊUTICOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "22"] <- "FABRICAÇÃO DE PRODUTOS DE BORRACHA E DE MATERIAL PLÁSTICO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "23"] <- "FABRICAÇÃO DE PRODUTOS DE MINERAIS NÃO-METÁLICOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "24"] <- "METALURGIA"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "25"] <- "FABRICAÇÃO DE PRODUTOS DE METAL, EXCETO MÁQUINAS E EQUIPAMENTOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "26"] <- "FABRICAÇÃO DE EQUIPAMENTOS DE INFORMÁTICA, PRODUTOS ELETRÔNICOS E ÓPTICOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "27"] <- "FABRICAÇÃO DE MÁQUINAS, APARELHOS E MATERIAIS ELÉTRICOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "28"] <- "FABRICAÇÃO DE MÁQUINAS E EQUIPAMENTOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "29"] <- "FABRICAÇÃO DE VEÍCULOS AUTOMOTORES, REBOQUES E CARROCERIAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "30"] <- "FABRICAÇÃO DE OUTROS EQUIPAMENTOS DE TRANSPORTE, EXCETO VEÍCULOS AUTOMOTORES"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "31"] <- "FABRICAÇÃO DE MÓVEIS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "32"] <- "FABRICAÇÃO DE PRODUTOS DIVERSOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "33"] <- "MANUTENÇÃO, REPARAÇÃO E INSTALAÇÃO DE MÁQUINAS E EQUIPAMENTOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "35"] <- "ELETRICIDADE, GÁS E OUTRAS UTILIDADES"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "36"] <- "CAPTAÇÃO, TRATAMENTO E DISTRIBUIÇÃO DE ÁGUA"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "37"] <- "ESGOTO E ATIVIDADES RELACIONADAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "38"] <- "COLETA, TRATAMENTO E DISPOSIÇÃO DE RESÍDUOS; RECUPERAÇÃO DE MATERIAIS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "39"] <- "DESCONTAMINAÇÃO E OUTROS SERVIÇOS DE GESTÃO DE RESÍDUOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "41"] <- "CONSTRUÇÃO DE EDIFÍCIOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "42"] <- "OBRAS DE INFRA-ESTRUTURA"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "43"] <- "SERVIÇOS ESPECIALIZADOS PARA CONSTRUÇÃO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "45"] <- "COMÉRCIO E REPARAÇÃO DE VEÍCULOS AUTOMOTORES E MOTOCICLETAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "46"] <- "COMÉRCIO POR ATACADO, EXCETO VEÍCULOS AUTOMOTORES E MOTOCICLETAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "47"] <- "COMÉRCIO VAREJISTA"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "49"] <- "TRANSPORTE TERRESTRE"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "50"] <- "TRANSPORTE AQUAVIÁRIO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "51"] <- "TRANSPORTE AÉREO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "52"] <- "ARMAZENAMENTO E ATIVIDADES AUXILIARES DOS TRANSPORTES"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "55"] <- "ALOJAMENTO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "53"] <- "CORREIO E OUTRAS ATIVIDADES DE ENTREGA"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "56"] <- "ALIMENTAÇÃO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "58"] <- "EDIÇÃO E EDIÇÃO INTEGRADA À IMPRESSÃO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "59"] <- "ATIVIDADES CINEMATOGRÁFICAS, PRODUÇÃO DE VÍDEOS E DE PROGRAMAS DE TELEVISÃO; GRAVAÇÃO DE SOM E EDIÇÃO DE MÚSICA"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "60"] <- "ATIVIDADES DE RÁDIO E DE TELEVISÃO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "61"] <- "TELECOMUNICAÇÕES"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "62"] <- "ATIVIDADES DOS SERVIÇOS DE TECNOLOGIA DA INFORMAÇÃO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "63"] <- "ATIVIDADES DE PRESTAÇÃO DE SERVIÇOS DE INFORMAÇÃO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "64"] <- "ATIVIDADES DE SERVIÇOS FINANCEIROS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "65"] <- "SEGUROS, RESSEGUROS, PREVIDÊNCIA COMPLEMENTAR E PLANOS DE SAÚDE"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "66"] <- "ATIVIDADES AUXILIARES DOS SERVIÇOS FINANCEIROS, SEGUROS, PREVIDÊNCIA COMPLEMENTAR E PLANOS DE SAÚDE"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "68"] <- "ATIVIDADES IMOBILIÁRIAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "69"] <- "ATIVIDADES JURÍDICAS, DE CONTABILIDADE E DE AUDITORIA"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "70"] <- "ATIVIDADES DE SEDES DE EMPRESAS E DE CONSULTORIA EM GESTÃO EMPRESARIAL"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "71"] <- "SERVIÇOS DE ARQUITETURA E ENGENHARIA; TESTES E ANÁLISES TÉCNICAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "72"] <- "PESQUISA E DESENVOLVIMENTO CIENTÍFICO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "73"] <- "PUBLICIDADE E PESQUISA DE MERCADO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "74"] <- "OUTRAS ATIVIDADES PROFISSIONAIS, CIENTÍFICAS E TÉCNICAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "75"] <- "ATIVIDADES VETERINÁRIAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "77"] <- "ALUGUÉIS NÃO-IMOBILIÁRIOS E GESTÃO DE ATIVOS INTANGÍVEIS NÃO-FINANCEIROS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "78"] <- "SELEÇÃO, AGENCIAMENTO E LOCAÇÃO DE MÃO-DE-OBRA"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "79"] <- "AGÊNCIAS DE VIAGENS, OPERADORES TURÍSTICOS E SERVIÇOS DE RESERVAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "80"] <- "ATIVIDADES DE VIGILÂNCIA, SEGURANÇA E INVESTIGAÇÃO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "81"] <- "SERVIÇOS PARA EDIFÍCIOS E ATIVIDADES PAISAGÍSTICAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "82"] <- "SERVIÇOS DE ESCRITÓRIO, DE APOIO ADMINISTRATIVO E OUTROS SERVIÇOS PRESTADOS ÀS EMPRESAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "84"] <- "ADMINISTRAÇÃO PÚBLICA, DEFESA E SEGURIDADE SOCIAL"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "85"] <- "EDUCAÇÃO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "86"] <- "ATIVIDADES DE ATENÇÃO À SAÚDE HUMANA"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "87"] <- "ATIVIDADES DE ATENÇÃO À SAÚDE HUMANA INTEGRADAS COM ASSISTÊNCIA SOCIAL, PRESTADAS EM RESIDÊNCIAS COLETIVAS E PARTICULARES"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "88"] <- "SERVIÇOS DE ASSISTÊNCIA SOCIAL SEM ALOJAMENTO"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "89"] <- "SEÇÃO Q CNAE2.0 - SAÚDE HUMANA E SERVIÇOS SOCIAIS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "90"] <- "ATIVIDADES ARTÍSTICAS, CRIATIVAS E DE ESPETÁCULOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "91"] <- "ATIVIDADES LIGADAS AO PATRIMÔNIO CULTURAL E AMBIENTAL"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "92"] <- "ATIVIDADES DE EXPLORAÇÃO DE JOGOS DE AZAR E APOSTAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "93"] <- "ATIVIDADES ESPORTIVAS E DE RECREAÇÃO E LAZER"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "94"] <- "ATIVIDADES DE ORGANIZAÇÕES ASSOCIATIVAS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "95"] <- "REPARAÇÃO E MANUTENÇÃO DE EQUIPAMENTOS DE INFORMÁTICA E COMUNICAÇÃO E DE OBJETOS PESSOAIS E DOMÉSTICOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "96"] <- "OUTRAS ATIVIDADES DE SERVIÇOS PESSOAIS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "97"] <- "SERVIÇOS DOMÉSTICOS"
+rais_selec$div_cnae_2[rais_selec$div_cnae_2 == "99"] <- "ORGANISMOS INTERNACIONAIS E OUTRAS INSTITUIÇÕES EXTRATERRITORIAIS"
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_criativa_2 <- rais_selec %>%
+  filter(div_cnae_2 %in% c("ATIVIDADES ARTÍSTICAS, CRIATIVAS E DE ESPETÁCULOS",
+                         "ATIVIDADES DE PRESTAÇÃO DE SERVIÇOS DE INFORMAÇÃO",
+                         "ATIVIDADES DE RÁDIO E DE TELEVISÃO",
+                         "ATIVIDADES DOS SERVIÇOS DE TECNOLOGIA DA INFORMAÇÃO",
+                         "ATIVIDADES LIGADAS AO PATRIMÔNIO CULTURAL E AMBIENTAL",
+                         "CONFECÇÃO DE ARTIGOS DO VESTUÁRIO E ACESSÓRIOS",
+                         "EDIÇÃO E EDIÇÃO INTEGRADA À IMPRESSÃO",
+                         "IMPRESSÃO E REPRODUÇÃO DE GRAVAÇÕES",
+                         "PESQUISA E DESENVOLVIMENTO CIENTÍFICO",
+                         "PUBLICIDADE E PESQUISA DE MERCADO",
+                         "FABRICAÇÃO DE PRODUTOS DIVERSOS"))
+
+write.csv(estoque_criativa_2, "P:/DESENVOLVIMENTO ECONOMICO/02 - Publico/Estudos Econômicos/Codigos2_R/Economia Criativa/estoque_criativa.csv",
+          row.names = FALSE)
+
+```
+
+**Diretoria de Estudos Econômicos** | Fábio Rocha^[Diretor de estudos econômicos. Economista pela UFOP]
+
+\newpage
+
+# Introdução
+
+Inovação, desenvolvimento social e econômico, emprego de qualidade, complexidade econômica e crescimento econômico. A literatura especializada parece convergir em alguma medida nesse sentido: inovação, tecnologia, indutria, criatividade e educação são algumas das variáveis que determinam o crescimento economico e ao mesmo tempo seu desenvolvimento.
+
+Conforme consta em estudo do BNDES (Banco Nacional do Desenvolvimento Economico Sustentavel), no Brasil, as indústrias criativas e culturais também demonstram participação relevante na economia. O estudo mais conhecido sobre o tema, que chegou à quinta edição, é publicado periodicamente pela Federação das Indústrias do Estado do Rio de Janeiro (FIRJAN, 2016). Segundo estimativas do estudo, indústrias criativas e culturais do Brasil foram responsáveis por gerar R$ 155,6 bilhões em 2015, o que representou 2,64% do PIB brasileiro naquele ano. No mesmo ano, essas indústrias empregaram 851,2 mil pessoas, ou 1,8% do total de empregos formais no Brasil (BNDES, 2018). Como veremos mais adiante, Ouro Preto, em termos de empregos formais, empregou proporcionalmente mais que 1,8%.
+
+Quando olhamos para economia criativa no mundo, de acordo com o último Relatório da UNCTAD - United Nations Conference on Trade and Development -, publicado em 2019, o mercado global de produtos da Economia Criativa saltou de US$ 208 bilhões em 2002 para US$ 509 bilhões em 2015.(FGV, 2019).
+
+Em estudo recente produzido pela Ernst & Young (EY, 2015) com o apoio da Organização das Nações Unidas para a Educação, a Ciência e a Cultura (Unesco), o valor de mercado das indústrias criativas e culturais no mundo foi estimado em US$ 2,25 trilhões em 2013, totalizando 3% do produto interno bruto (PIB) mundial naquele ano. Em relação ao número de empregos, o estudo estimou que 29,5 milhões de pessoas (cerca de 1% da população ativa no mundo) trabalhavam em alguma dessas indústrias, nesse mesmo período. (BNDES, 2018).
+
+Nesse sentido, esse relatório surge da necessidade de estimar a relevância e o tamanho dessa industria criativa e cultural, ou como sugerem outros autores, economia criativa no municipio de Ouro Preto. Assim esse relatório está estruturado em seis partes para além desta introdução. (2) Introdução; (3) Caracterização da economia criativa; (4) Estratégia empírica; (5) Mensurando a economia critiva de Ouro Preto; (6) Rendimento médio real; (7) Rendimentos médios por atividade; (8) Considerações finais.
+
+# Caracterização da economia criativa
+
+Começamos, então, como algumas definições do que se propõe classificar como uma atividade da economica criativa.
+
+>>"A economia criativa trata dos bens e serviços baseados em textos, símbolos e imagens e refere-se ao conjunto distinto de atividades assentadas na criatividade, no talento ou na habilidade individual, cujos produtos incorporam propriedade intelectual e abarcam do artesanato tradicional às complexas cadeias produtivas das indústrias culturais." (MIGUEZ, 2007, p. 96).
+
+Em estudo publicado pelo IPEA (Insitutuo de Pesquisa Econômica Aplicada) em 2013, os autores trazem algumas caracterizações, em parte proposta por instituições internacionais, do que vem a ser atividades (ocupações) e produtos oriundos da industria cultura ou economia criativa.
+
+>>"Economia criativa é o conjunto de atividades econômicas que dependem do conteúdo simbólico – nele incluído a criatividade como fator mais expressivo para a produção de bens e serviços, guardando estreita relação com aspectos econômicos, culturais e sociais que interagem com a tecnologia e propriedade intelectual."(IPEA,2013)
+
+Howkins, um dos expoentes pesquisadores do tema e citado no estudo do IPEA, sugere a forte presença da criatividade e conteúdo simbólico como marcas resgistrada da economia criativa.
+
+>>Howkins (2001) sustenta a ideia de que a economia criativa se assenta sobre a relação entre a criatividade, o simbólico e a economia. Assim, economia criativa é o conjunto de atividades econômicas que dependem do conteúdo simbólico – nele incluído a criatividade como fator mais expressivo para a produção de bens e serviços.(IPEA, 2013)
+
+A partir da definição gerada por Howkins (2001) e combinando com a estruturação conceitual da UNCTAD (2010), pode-se afirmar que a economia criativa: *é o conjunto de atividades econômicas que dependem do conteúdo simbólico – nele incluído a criatividade já citada, como fator mais expressivo para a produção de bens e serviços; é um conceito em evolução com base em recursos criativos potencialmente geradores de crescimento e desenvolvimento econômico; pode promover ganhos de geração de renda, criação de emprego e exportação, promovendo a inclusão social, a diversidade cultural e o desenvolvimento humano; e abrange aspectos econômicos,culturais e sociais que interagem com a tecnologia e propriedade intelectual numa mesma dimensão e tem relações de transbordamento muito próximas com o turismo e o esporte.* (IPEA, 2013)
+
+## O conceito de “produtos culturais”
+
+Os bens e serviços culturais, como obras de arte, apresentações musicais, programas de cinema, literatura e televisão, e jogos de vídeo, compartilham as seguintes características: 
+
+(1) sua produção requer participação expressiva da *criatividade humana* e, por consequência, de *conteúdo simbólico*;
+(2) são veículos de mensagens simbólicas para quem os consome, ou seja, são mais do que simplesmente veículos de comunicação, na medida em que, adicionalmente, servem a algum propósito maior; e
+(3) eles contêm, pelo menos potencialmente, alguma *propriedade intelectual* que é atribuível ao indivíduo ou grupo de produção do bem ou serviço. (IPEA, 2013)
+
+Uma definição alternativa ou adicional de *bens e serviços culturais* deriva de uma consideração do tipo de valor que eles representam ou geram. Ou seja, pode-se sugerir que esses bens e serviços têm um valor cultural em adição a qualquer valor comercial que possam possuir e que esse valor cultural não pode ser totalmente mensurável em termos monetários.(IPEA, 2013)
+
+Definido em um ou ambos desses caminhos, os bens e serviços culturais podem ser vistos como um subconjunto de uma categoria mais ampla que pode ser chamado de *bens e serviços criativos*, cuja produção exige nível significativo de criatividade e conteúdo simbólico. Assim, a categoria criativo se estende além dos bens e serviços culturais como definido anteriormente para incluir produtos como *moda* e *software*. Estes últimos podem ser vistos essencialmente como produtos comerciais, mas a sua produção envolve certo nível de criatividade. Esta distinção constitui uma base para a diferenciação entre indústrias culturais e criativas.(IPEA, 2013)
+
+Para a UNCTAD (2010) , por exemplo, as *indústrias culturais* são consideradas como as indústrias que “**combinam a criação, produção e comercialização de conteúdos que são intangíveis e culturais por natureza. Estes conteúdos são tipicamente protegidos por direitos autorais e podem assumir a forma de bens ou serviços**”. Um aspecto importante das indústrias culturais, segundo a UNCTAD (2010), é que elas são “centrais na promoção e manutenção da diversidade cultural e na garantia de acesso democrático à cultura”. Essa dupla natureza – combinando o cultural e o econômico – dá às indústrias culturais um perfil distinto.(IPEA, 2013)
+
+
+# Estratégia empírica
+
+Conforme os autores do IPEA apresentaram no estudo, sua metodoligia de estimação do estoque de trabalho formal da economia criativa para o Brasil é aquela que estima a partir dos dados da RAIS (Relação Anual de Informações Sociais). Neste relatório adotaremos a mesma metodologia.
+
+>>Conceitualmente, relaciona-se a *economia criativa* com a noção de conteúdos correlatos, como criatividade, bens e serviços criativos, indústrias criativas e indústrias culturais. Do ponto de vista da mensuração, são empregadas duas dimensões e duas abordagens. As dimensões são: a setorial – em que o foco está no ramo de atividade das empresas – e a ocupacional ou das classes criativas – em que o foco está na ocupação profissional exercida pelo trabalhador, e se esta é criativa ou não. As abordagens são a da economia formal, para a qual utilizamos dados da Relação Anual de Informações Sociais (Rais), do Ministério do Trabalho e Emprego. (IPEA, 2013)
+
+## Classificação de atividades
+
+De acordo com o modelo adotado, as indústrias criativas compreendem quatro grandes grupos – *patrimônio*, *artes*, *mídia* e *criações funcionais*, tendo em conta as suas características distintas.
+
+- Grupo 1 - Patrimônio: Patrimonio cultural é identificado como a origem de todas as formas de artes e a alma das indústrias culturais e criativas, o ponto de partida para esta classificação. É a herança que reúne aspectos culturais dos pontos de vista histórico, antropológico, étnico, estético e social, e influencia a criatividade dando origem a uma série de bens e serviços do patrimônio, bem como atividades culturais. Este grupo é, portanto, dividido em dois subgrupos: 
+
+a) Expressões culturais tradicionais: artesanato, festivais e celebrações; e
+b) Locais culturais: sítios arqueológicos, museus, bibliotecas e exposições.
+
+- Grupo 2 - Artes: este grupo inclui as indústrias criativas baseadas puramente em arte e cultura. A obra artística é inspirada no patrimônio, identidade de valores e no sentido simbólico. Este grupo é dividido em dois grandes subgrupos: 
+
+a) Artes visuais: pintura, escultura, fotografia e antiguidades; e 
+b) Artes performáticas: música ao vivo, teatro, dança, ópera, circo e marionetes. 
+
+- Grupo 3 - Mídia: este grupo abrange dois subgrupos de mídia que produzem conteúdo criativo com o objetivo de gerar comunicação com o grande público: 
+
+a) Publicações e mídia impressa: livros, imprensa e outras publicações; e 
+b) Audiovisual: cinema, televisão, rádio e outras formas de radiodifusão. 
+
+- Grupo 4 - Criações funcionais: este grupo agrega atividades que são mais orientadas à demanda e atividades de criação de bens e serviços com fins funcionais. Está dividido nos seguintes subgrupos: 
+
+a) Design: interiores, gráfico, moda, jóias e brinquedos; 
+b) New media: software, games e conteúdo digital criativo; e 
+c) Serviços criativos: arquitetura, publicidade, P & D, serviços digitais e outros serviços criativos relacionados.
+
+# Mensurando a economia criativa de Ouro Preto
+
+A parte um deste relatório focou na exposição do que a literatura especializada considera como atividades da economia criativa, embora tais concepções não sejam estritamente fechadas - trata-se de um conceito em constante evolução. Nesta parte, então, passamos a de fato estimar, a partir dos dados da RAIS, o estoque de trabalho formal na economia criativa de Ouro Preto. Assim, para efeitos de estimação foram considerado as seguinte atividades econômicas (CNAE 2.0) para estimação.
+
+- Atividades artísticas, criativas e de espetáculos,
+- Atividades de prestação de serviços de informação,
+- Atividades de rádio e de televisão,
+- Atividades dos serviços de tecnologia da informação,
+- Atividades ligadas ao patrimônio cultural e ambiental,
+- Confecção de artigos do vestuário e acessórios,
+- Edição e edição integrada à impressão,
+- Impressão e reprodução de gravações,
+- Pesquisa e desenvolvimento científico,
+- Publicidade e pesquisa de mercado,
+- Fabricação de produtos diversos.
+
+## Empregos totais em economia criativa de Ouro Preto
+
+Numa análise exploratória, podemos observar que na média, entre 2006 a 2021, o número de empregos formais em economia criativa foi de 606 por ano (linha horizontal em vermelho). Já o menor valor do período foi de 255 empregos em 2018, ano que coincide com ano o ultimo ano de governo do então presidente Michel Temer, e eleição para presidência. Ao passo que o maior nível de emprego foi em 2014, com 788 empregos, ano que coincide com o ultimo ano de governo Dilma I (2011-2014).
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_criativa_2 %>%
+  count(ano) %>%
+  ggplot(aes(x = as.character(ano), y = n,
+             label = n))+
+  geom_bar(stat = "identity")+
+  geom_hline(yintercept=606, colour='red')+
+  geom_label(color = "black")+
+  theme_minimal()+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Empregos formais em Economia Criativa",
+       subtitle = "Microdados Vínculos (2006-2021)",
+       x = "",
+       y = "",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")+
+  theme(legend.position = "none")
+
+```
+
+A título de comparação, em termos de emprego formal de toda economia de Ouro Preto, com os mesmos dados da Rais, temos que esse mesmo estoque de empregos formais teve uma melhora em relação ao ano anterior, 2020 (crescimento de 12,17%). Em termos médios, para o período 2005-2021, o emprego formal foi de 24319 ao ano. Trouxemos ele para análise pelo fato de a partir dele podermos calcular quanto, em termos percentuais, os empregos formais da economia criativa representam do estoque de trabalho total.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+rais_selec %>%
+  count(ano) %>%
+  ggplot(aes(x = as.character(ano), y = n,
+             label = n))+
+  geom_bar(stat = "identity")+
+  geom_label(color = "black")+
+  geom_hline(yintercept=24319, colour='red')+
+  theme_minimal()+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Empregos formais totais",
+       subtitle = "Microdados Vínculos (2006-2021)",
+       x = "",
+       y = "",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")+
+  theme(legend.position = "none")
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=12, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque <- estoque_criativa_2 %>% count(ano)
+
+estoque_total <-rais_selec %>% count(ano) 
+
+estoque_total <- estoque_total[-1,]
+
+estoque_total <- estoque_total %>%
+  mutate(emp_total = estoque$n) %>%
+  mutate(proporcao = (emp_total/n)*100)
+
+```
+
+Ao mesmo tempo, quando analisamos esse estoque de trabalho em relação ao estoque total, percebemos que ele não se distancia da realidade brasileira - vem apresentando uma queda desde de 2007, atingindo menor patamar em 2018 e dando sinais de melhora a partir desse ano. Ao mesmo tempo, em termos médios de taxa de ocupação formal, a economia criativa empregou 2,46% ao ano. Além disso, conforme poderemos verificar mais adiante, embora tenha havido redução da participação desses trabalhadores na atividade, ocorreu uma elevação do rendimento médio real (deflacionado pelo IPCA) no mesmo período analisado, exceto para 2021.
+
+```{r, echo=F, eval=T, results='asis', fig.width=10, fig.height=4, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+ggplot(estoque_total, aes(x = as.character(ano), y = proporcao))+
+  geom_col()+
+  geom_label(aes(label=round(proporcao, digits=2)))+
+  geom_hline(yintercept=2.46, colour='red')+
+  theme_minimal()+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.position = "top",
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Proporção de empregos - Ouro Preto (MG)",
+       subtitle = "Microdados Vínculos (2006-2021)",
+       x = "",
+       y = "%",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")
+```
+
+Quando analisamos a evolução do emprego formal da economia criativa, por atividade, observamos que elas oscilaram (variaram) de diferentes formas ao longo da série histórica. Mas destacam-se o crescimento das três atividades: Fabricação de Produtos Diversos, Atividades de Serviços de Informação e Atividades dos Serviços de Tecnologia da Informação. Todas as demais atividades ligadas a economia critativa tiveram uma redução do número de empregos formais.
+
+
+```{r, echo=F, eval=T, results='asis', fig.width=13, fig.height=8.5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_criativa_2 %>%
+  count(ano,div_cnae_2) %>%
+  ggplot(aes(x = ano, y = n))+
+  #scale_x_continuous(breaks = c(2006:2021))+
+  geom_col(aes(fill=div_cnae_2))+
+  #geom_line()+
+  geom_label(aes(label=n), size=2.)+
+  facet_wrap(~div_cnae_2, scales = "free", ncol = 3)+
+  theme_minimal()+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Estoque de trabalho em economia criativa - Ouro Preto",
+       subtitle = "Por atividade CNAE 2.0 - Microdados Vínculo (2006-2021)",
+       x = "",
+       y = "",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")+
+  theme(legend.position = "none")
+
+```
+
+## Atividades relacionadas a tecnologia
+
+A fim de verificar com maior precisão a evolução dos empregos formais nas atividades relacionadas a tecnologia, fizemos um recorte nos dados e esboçamos as duas principais atividades relacionadas: Atividades de prestação de serviços de informação e Atividades de serviços de tecnologia da informação^[Dicionário CNAE 2.0 contendo as demais atividades que estão dentro dessas duas: https://docs.google.com/spreadsheets/d/e/2PACX-1vRRotYC3NOsYJDM3BP9uGCMtRlAcQWEArm-OspYhJNF4OLVyp5ARpc8leSJXch7RA/pubhtml]
+
+```{r, echo=F, eval=T, results='asis', fig.width=13, fig.height=8.5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+tech=estoque_criativa_2 %>%
+  count(ano,div_cnae_2) %>%
+  filter(div_cnae_2 %in% c("ATIVIDADES DE PRESTAÇÃO DE SERVIÇOS DE INFORMAÇÃO",
+                           "ATIVIDADES DOS SERVIÇOS DE TECNOLOGIA DA INFORMAÇÃO"))
+
+tech_tabela = tech %>%
+  pivot_wider(names_from = div_cnae_2, values_from = n) %>%
+  rename_with(~c('ano', 'serv_info', 'tec_info')) %>%
+  mutate(cres_info = round((100*(serv_info - lag(serv_info))/lag(serv_info)),2)) %>%
+  mutate(cres_tech = round((100*(tec_info - lag(tec_info))/lag(tec_info)),2)) %>%
+  mutate(total = serv_info + tec_info) %>%
+  mutate(cres_total = round((100*(total - lag(total))/lag(total)),2))
+
+```
+
+### Tabela 1
+
+Em que:
+
+- (A) = Número de empregos em Atividades de Prestação de Serviços de Informação
+- (B) = Número de empregos em Atividades dos serviços de Tecnologia da Informação
+- Var (%) (A) = Variação percentual do ano seguinte em relação ao ano anterior de (A)
+- Var (%) (B) = Variação percentual do ano seguinte em relação ano anterior de (B)
+- (A)+(B) = Soma dos empregos totais da área
+- Var (%) (A) + (B) = Variação percentual do ano seguinte em relação ao ano anterior de (A) + (B)
+
+```{r, echo=F, eval=T, results='asis', fig.width=11, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+tech_tabela %>%
+  gt(groupname_col = "") %>%
+  tab_header(title = md("**Empregos em tecnologia**"),
+             subtitle = glue("2006-2021")) %>%
+  tab_source_note(md("**Dados**: Rais | **Elaboração**: Diretoria de Estudos Econômicos")) %>%
+  cols_label(ano = "Ano",
+             serv_info = "(A)",
+             tec_info = "(B)",
+             total = "(A) + (B)",
+             cres_info = "Var (%) (A)",
+             cres_tech = "Var (%) (B)",
+             cres_total = "Var(%) (A) + (B)")
+           
+```
+
+Ao analisarmos o crescimento de empregos em ambas atividades - a coluna Var(%) + (A) + (B) - verificamos que a taxa de crescimento média é 52.22% dos ultimos 4 anos (2018-2021). Em termo anuais, entre 2017 a 2018 o crecimento foi de 36,9%, 2018 a 2019, 71,3%, 2019 a 2020, 50,76% e 2020 a 2021, 51,85%.
+
+Em termos visuais, no gráfico abaixo, é nítido a disparada de contratações em ambas atividades a partir do ano de 2018. Embora não possamos afirmar categoricamente que isso decorre, em parte, do ambiente institucional de inovação estabelecido - inaugurado - no município, já que nesse ano foi aprovado a lei de incentivo a tecnologia^[Tal Lei concedeu isenção de IPTU aos estabelecimentos de tecnologia no munipio pelos próximos 10 anos e ISSQN de 2% (a menor aliquota). Lei Complementar 183 de 18 de dezembro de 2018] é razoável supor que essa variável tributos tenha um peso na decisão dos empresários de investir com maior segurança e estabilidade no muncípio, favorecendo, por exemplo, ampliaçao da contratação de trabalhadores dessa atividade.
+
+Outrossim, é possivel notar que ano de 2019, a atividade de prestação de serviços de informação (tratamento de dados, hospedaem na internet, portais, agencias de noticias, entre outras^[Ver nota de rodapé 2]) além de ultrapassar a atividade dos serviços de tencologia da informação, segue em trajetória de crescimento mais acelerada.
+
+```{r, echo=F, eval=T, results='asis', fig.width=13, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+  ggplot(tech, aes(x = ano, y = n, color = div_cnae_2))+
+  geom_line()+
+  theme(legend.position = "right")+
+  geom_label(aes(label=n), size=5)+
+  scale_x_continuous(breaks = c(2006:2021))+
+  theme_minimal()+
+  theme(legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Estoque de trabalho em economia criativa - Ouro Preto",
+       subtitle = "Tecnologia da Informação - Microdados Vínculo (2006-2021)",
+       x = "",
+       y = "",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos") + 
+  theme(legend.position = "top")
+  
+
+```
+
+## Empregos formais em economia criativa por grau de instrução
+
+Os dados para o recorde educacional sinalizam um queda no número de pessoas com escolaridade inferior a superior incompleto. Na verdade mais do que isso, houve uma intensa contratação de pessoas com escolaridade mais alta, exceto doutores e mestres, e redução de pessoas com escolaridade mais baixa.
+
+```{r, echo=F, eval=T, results='asis', fig.width=12, fig.height=8, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_criativa_2 %>%
+  count(ano, grau_instrucao_apos_2005) %>%
+  ggplot(aes(x = as.character(ano), y = n))+
+  geom_bar(stat = "identity")+
+  geom_label(aes(label=n), size=2.0)+
+  facet_wrap(~grau_instrucao_apos_2005, scales = "free", ncol = 3)+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle= 45, hjust = 1.5, vjust =1.7, size=8))+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Empregos formais em economia criativa - Ouro Preto",
+       subtitle = "Por grau de instrução - Microdados Vínculo (2006-2020)",
+       x = "",
+       y = "",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")+
+  theme(legend.position = "none")
+
+```
+
+## Empregos formais em economia criativa por sexo
+
+Já em relação a distribuição desse estoque de trabalho por sexo, os dados sinalizam haver uma distribuição relativamente proporcional, isto é, no geral homens e mulheres estão empregados na atividade em igual proporção em termos relativos. Entretanto, a partir de 2012 a participação de homens na atividade foi maior, apresentando um diferença muito mais discrepante os demais anos para homens, ou seja, homens foram muito mais empregados na atividade do que as mulheres.
+
+```{r, echo=F, eval=T, results='asis', fig.width=12, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_criativa_2 %>%
+  count(ano, sexo) %>%
+  ggplot(aes(x = ano, y = n,
+             fill = sexo,
+             label = n))+
+  geom_col(position="dodge")+
+  theme_minimal()+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Estoque de trabalho em economia criativa - Ouro Preto",
+       subtitle = "Por sexo - Microdados Vínculo (2006-2020)",
+       x = "",
+       y = "",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")+
+  theme(legend.position = "top")
+
+```
+
+Para identificar a atividade econômica que contratou mais trabalhadores do sexo masculino, esboçamos outro grágico que permite observar essa variação entre os anos. Constata-se que as duas atividades relacionadas a tecnologia (Atividades de prestação de serviços de informação e Atividades de serviços de tecnologia da informação), contratou mais homens do que mulheres em 2021. As demais atividades tiveram contratações relativamente iguais em termos proporcionais.
+
+```{r, echo=F, eval=T, results='asis', fig.width=14, fig.height=7, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_criativa_2 %>%
+  count(ano, sexo, div_cnae_2) %>%
+  ggplot(aes(x = ano, y = n,
+             fill = sexo,
+             label = n))+
+  geom_col()+
+  facet_wrap(~div_cnae_2, scales = "free", ncol=3)+
+  theme_minimal()+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Estoque de trabalho em economia criativa - Ouro Preto",
+       subtitle = "Por sexo - Microdados Vínculo (2006-2020)",
+       x = "",
+       y = "",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")+
+  theme(legend.position = "top")
+
+```
+
+## Empregos formais em economia criativa por tipo de contrato
+
+Quanto ao tipo de contrato formalizado entre os empregadores e empregados na economia criativa de Ouro Preto, os dados sinalizam que em sua grande maioria são contratos CLT U/PJ IND^[Trabalhador urbano vinculado a empregador pessoa jurídica por contrato de trabalho regido pela CLT, por prazo indeterminado.].
+
+```{r, echo=F, eval=T, results='asis', fig.width=12, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_criativa_2 %>%
+  count(ano, tipo_vinculo) %>%
+  ggplot(aes(x = as.character(ano), y = n))+
+  geom_bar(stat = "identity")+
+  geom_label(aes(label=n), size=2.)+
+  theme_minimal()+
+  theme(axis.text.x = element_text(angle= 45, hjust = 1.5, vjust =1.7))+
+  facet_wrap(~tipo_vinculo)+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Estoque de trabalho em economia criativa - Ouro Preto",
+       subtitle = "Por tipo de contrato - Microdados Vínculo (2006-2020)",
+       x = "",
+       y = "",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")+
+  theme(legend.position = "none")
+
+```
+
+## Empregos formais em economia criativa por raça ou cor
+
+Quanto a distribuição desse estoque de trabalho por raça/cor, constata-se que a atividade é predominantemente desenvolvida por pessoas brancas e pardas, e em menor proporção por pessoas pretas. Além disso, é possível identificar que entre 2009 a 2015 houve um crescimento de pessoas pardas na atividade economica. Já pessoas autodeclaradas brancas diminuíram sua participação nesta atividade a partir de 2012, voltando, junto com pardas, crescer sua participação em 2018. 
+
+```{r, echo=F, eval=T, results='asis', fig.width=12, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_criativa_2 %>%
+  count(ano, raca_cor) %>%
+  ggplot(aes(x = ano, y = n))+
+  geom_bar(stat = "identity")+
+  geom_label(aes(label=n), size=2.)+
+  theme_minimal()+
+  facet_wrap(~raca_cor)+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Estoque de trabalho em economia criativa - Ouro Preto",
+       subtitle = "Por raça/cor - Microdados Vínculo (2006-2020)",
+       x = "",
+       y = "",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")+
+  theme(legend.position = "none")
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=12, fig.height=8, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+tabela_ipca <- read_csv("ipca.csv",
+                 skip = 1,
+                 col_names = c("ano", "ipca"))
+
+
+tabela_ipca <- tabela_ipca[27:42,]
+tabela_ipca <- tabela_ipca[,-3]
+
+
+cresc_cria <- estoque_criativa_2 %>% 
+  group_by(ano) %>%
+  summarise(media_ano = mean(valor_remuneracao_media)) %>%
+  mutate(ipca = tabela_ipca$ipca)
+
+
+cresc_cria <- cresc_cria %>%
+  mutate(ano_base = cresc_cria[16,3]) %>%
+  mutate(deflator = ano_base/ipca) %>%
+  mutate(rendimento_real = deflator*media_ano)
+
+
+```
+
+# Rendimento médio real
+
+Quanto aos rendimentos médios reais, quando analisamos a atividade como um todo, constatamos um forte crescimento dos rendimentos a partir de 2016, a valores de 2021 até o ano de 2020, revertendo a trajetória de crescimento no ano de 2021. O salto do rendimento médio entre 2016 a 2020 foi de  213,08%. Isso considerando o ano 2015 que é o ano que apresenta menor rendimento médio na série analisada. Seja como for, tais rendimentos são muito superiores das demais atividades como indutria extrativa, comércio, agricultura, contrução e serviços.
+
+```{r, echo=F, eval=T, results='asis', fig.width=13, fig.height=5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+  ggplot(cresc_cria, aes(x = ano, y = rendimento_real$ipca))+
+  geom_col()+
+  #zgeom_line(color="red")+
+  theme_minimal()+
+  geom_label(aes(label=round(rendimento_real$ipca)))+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.text = element_text(size=5),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Rendimento médio real na Economia Criativa - Ouro Preto",
+       subtitle = "Preços de 2021 - deflacionado pelo IPCA",
+       x = "",
+       y = "Reais",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")+
+  theme(legend.position = "none")
+
+```
+
+Uma explicação para esse elevado crescimento do rendimento médio desta atitividade economica pode ser explicada, pelo menos em parte, pela entrada de mais pessoas com escolaridade superior completo e incompleto nas *Atividades de Prestação de Serviços de Informação*, e *Atividades dos Serviços de Tecnologia da Informação.*. Essas são atividades relacionadas a área de Tecnologia e entraram em alta nos ultimos anos, especialmente no ano de pandemia. Por isso, tem demandado cada vez mais profissionais.
+
+O gráfico abaixo evidencia essa explicação.
+
+## Quantidade de trabalhadores por atividade econômica e escolaridade
+
+```{r, echo=F, eval=T, results='asis', fig.width=13, fig.height=8.5, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+estoque_criativa_2 %>%
+  count(ano,div_cnae_2, grau_instrucao_apos_2005) %>%
+  ggplot(aes(x = ano, y = n))+
+  geom_col(aes(fill = grau_instrucao_apos_2005))+
+  facet_wrap(~div_cnae_2, scales = "free", ncol = 3)+
+  theme_minimal()+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.position = "top",
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Estoque de trabalho em economia criativa - Ouro Preto",
+       subtitle = "Por atividade CNAE 2.0 e grau de instrução - Microdados Vínculo (2006-2020)",
+       x = "",
+       y = "",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")
+
+```
+
+```{r, echo=F, eval=T, results='asis', fig.width=12, fig.height=8, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+
+cresc_cria_rend_ativ <- estoque_criativa_2 %>% 
+  group_by(ano, div_cnae_2) %>%
+  summarise(media_ano = mean(valor_remuneracao_media))
+  
+
+cresc_cria_rend_ativ <- cresc_cria_rend_ativ %>% 
+  left_join(tabela_ipca, by = "ano")
+         
+         
+cresc_cria_rend_ativ <- cresc_cria_rend_ativ %>%
+  mutate(ano_base = cresc_cria_rend_ativ[64785,4]) %>%
+  mutate(deflator = ano_base/ipca) %>%
+  mutate(rendimento_real = deflator*media_ano)
+
+
+```
+
+## Rendimentos médios reais por atividade.
+
+Nesta parte final são apresentados os rendimentos reais por atividade economica de acordo com a classificação CNAE 2.0. O que se constata é que houve um crescimento expressivo dos rendimentos médios recebidos pelas pessoas que atuam nas *Atividades de Prestação de Serviços de Informação*, *Atividades de Rádio e Televisão* e *Atividades dos Serviços de Tecnologia da Informação.*
+
+```{r, echo=F, eval=T, results='asis', fig.width=13, fig.height=10, fig.align='center', out.width=".9\\linewidth", warning=FALSE, message=FALSE, size='small'}
+
+  ggplot(cresc_cria_rend_ativ, aes(x = ano, y = media_ano))+
+  geom_col(aes(fill=div_cnae_2))+
+  geom_label(aes(label=round(media_ano)), size=2)+
+  facet_wrap(~div_cnae_2,  ncol = 2, scales = "free")+
+  theme_minimal()+
+  theme(legend.key.size = unit(0.5, "cm"),
+        legend.position = "none",
+        legend.text = element_text(size=10),
+        legend.title = element_blank(),
+        plot.title = ggplot2::element_text(face = "bold"),
+        plot.subtitle = ggplot2::element_text(face = "italic"))+
+  labs(title = "Rendimento médio real em Economia Criativa - Ouro Preto (MG)",
+       subtitle = "Por atividade CNAE 2.0 - Microdados Vínculo (2006-2020) | Preços de 2021 - deflacionado pelo IPCA",
+       x = "",
+       y = "Reais",
+       caption = "Fonte: Rais | Elaboração: Diretoria de Estudos Econômicos")
+
+```
+
+# Considerações finais
+
+A economia criativa, portanto os serviços e produtos dela originado, é caracterizada, em termos gerais, por seu conteúdo critiavo, simbólico, cultural e autoral, que exatamente por possuírem essas propriedades contribuem expressivamente para o crescimento e desenvolvimento econômico local e nacional. 
+
+Este relatório evidência que embora a economia criativa do município tenha encolhido seu tamanho entre 2015 a 2018, essa trajetória se revertou a partir de 2019. Em termos percentuais, os empregos em economia criativa saltaram 113,7% de 2018 a 2021. Em termos nominais isso significa a geração de 290 postos de trabalho formal.
+
+Além disso, esse crescimento foi puxado especialmente pelas atividades ligadas a tecnologia (Atividades de Prestação de Serviços de Informação e Atividades dos Serviços de Tecnologia da Informação) que entre 2018 a 2021 gerou 336 postos de trabalho. Ou seja, em 2018, dos 255 postos de trabalho, 115 eram da tecnologia (45,09%), e em 2021, dos 545 postos de trabalho na atividade, 415 eram da tecnologia (76,14%). Esse crescimento também demandou mão de obra com maior qualificação. Isto é, as contratações ocorreram especialmente para pessoas com escolaridade superior completo e incompleto (cursando).
+
+Em termos gerais, as contratações do ano de 2021 foram em maior proporção para pessoas do sexo masculino. Essa concentração ocorreu principalmente nas atividades ligadas a tecnologia.
+
+Por fim, os rendimentos reais como um todo tiveram uma queda no ultimo ano, reflexo de uma alta inflacionária generalizada na economia brasileira. Mas se consideramos a série 2006-2020, o aumento real do rendimento médio é superior a 200%. E novamente, os rendimentos médios maiores são para as atividades de tecnologia, que em 2021 alcançaram `R$` 6280,00 e `R$` 4265,00
+
+
+
+# Referências
+
+- https://web.bndes.gov.br/bib/jspui/bitstream/1408/16280/1/PRCapLiv214176_Economia%20criativa_compl_P.pdf
+- http://repositorio.ipea.gov.br/bitstream/11058/2026/1/TD_1880.pdf
+- https://fgvprojetos.fgv.br/sites/fgvprojetos.fgv.br/files/economiacriativa_formatacaosite.pdf
+- Ministério do Trabalho (Programa de Disseminação de Estatísitcas do Trabalho (PDET)) - Rais
+
