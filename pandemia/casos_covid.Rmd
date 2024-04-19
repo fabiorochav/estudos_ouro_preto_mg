@@ -1,0 +1,98 @@
+---
+title: "Situação Epidemiologica de Ouro Preto 2020-2022"
+author: "Fábio Rocha"
+output: pdf_document
+---
+
+```{r}
+#####Carregar pacote
+
+library(readxl)
+library(readr)
+library(magrittr)
+library(ggplot2)
+library(scales)
+library(zoo)
+library(dplyr)
+library(lubridate)
+library(tidyverse)
+
+```
+
+# Carregando dados
+
+```{r}
+dados_covid_op <- read_xlsx("C:/Users/Usuario/Desktop/Acessados/Planilhas/Casos Covid_19.xlsx", col_types = c("date",
+                                                                 "guess",
+                                                                 "guess",
+                                                                 "guess",
+                                                                 "guess",
+                                                                 "guess",
+                                                                 "guess"
+                                                                 ))
+```
+
+# Seleção de variaveis #########
+
+```{r}
+
+covid <- dados_covid_op %>%
+    select(
+    "Data" = `DATA`,
+    "Novos_casos" =  `Novos Casos`,
+    "Novos_óbitos" = `Novos óbt`,
+    "Variação_internação" = `Var. Inter.`,
+    "inter" = `internados`) %>%
+  mutate(mes = month(Data, label = TRUE)) %>%
+  mutate(ano = year(Data))
+
+```
+
+# Visualizar dados
+
+```{r}
+
+ggplot(covid, aes(x=Data, y=inter))+
+geom_col(fill="orange")+
+  #facet_wrap(~ano)+
+  theme(axis.text.x=element_text(angle=65, hjust=1, vjust=1))+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='Óbitos',
+    title="Internação por Covid-19 - Ouro Preto Enfermaria e UTI (2020-2022)",
+    subtitle = 'Fonte: Boletim Prefeitura de Ouro Preto',
+    caption='Elaboração: Fábio Rocha')
+
+```
+
+```{r}
+
+ggplot(covid, aes(x=mes, y=Novos_óbitos))+
+ geom_col(fill="purple")+
+  facet_wrap(~ano)+
+  theme(axis.text.x=element_text(angle=65, hjust=1, vjust=1))+
+  theme(legend.position = "null",
+        #legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='Óbitos',
+    title="Óbitos por Covid-19 em Ouro Preto (2020-2022)",
+    subtitle = 'Fonte: Boletim Prefeitura de Ouro Preto',
+    caption='Elaboração: Fábio Rocha')
+
+```
+```{r}
+
+ggplot(covid, aes(x=mes, y=Novos_casos))+
+ geom_col(fill="brown")+
+  facet_wrap(~ano)+
+  theme(axis.text.x=element_text(angle=65, hjust=1, vjust=1))+
+  theme(legend.position = "top",
+        legend.key.size = unit(0.3, "cm"),
+        legend.title = element_blank())+
+  labs(x='', y='Casos',
+    title="Casos de Covid-19 - Ouro Preto (2020-2022)",
+    subtitle = 'Fonte: Boletim Prefeitura de Ouro Preto',
+    caption='Elaboração: Fábio Rocha')
+
+```
