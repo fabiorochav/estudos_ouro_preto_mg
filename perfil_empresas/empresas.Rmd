@@ -1,0 +1,103 @@
+---
+title: "Prefeitura Municipal de Ouro Preto"
+subtitle: "**Secretaria de Desenvolvimento Econômico Inovação e Tecnologia**"
+author: "*Diretoria de Estudos Econômicos | Fábio Rocha *"
+abstract: "Este relatório apresenta informações gerais sobre o perfil da atividade econômica na cidade de Ouro Preto. No primeiro gráfico observamos que o número de empresas cadastradas por ano e quantidade de pessoas que trabalham nessas empresas. É explicito que entre os anos 2000 e 2019 predominou a atuação de empresas com até 9 funcionários. No segundo gráfico apresentamos o número de empresas cadastradas no município no mesmo período, por atividade econômica conforme definição do **CNAE**. É possível notar a alta participação do comércio e oficinas de manutenção em veículos automotores e motocicletas. Já no terceiro gráfico destacamos o número de empresas com até 4 e 9 funcionários. E por fim mas não menos importante, o ultimo gráfico resume o número de empresas fundadas por ano, sinalizando que os anos 1996 a 2000 foi o ano que houve maior número de empresas cadastradas no município."
+output: pdf_document
+---
+
+```{r, echo=T, eval=T, warning=FALSE, message=FALSE}
+
+library(sidrar)
+library(magrittr)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(zoo)
+
+```
+
+```{r, echo=T, warning=FALSE, message=FALSE}
+
+df = get_sidra(api="/t/993/n6/3146107/v/allxp/p/last%2010/c12762/allxt/c319/0,7823,7824,7825,7827,7828,96894,99734,101226/c12386/allxt")
+```
+
+```{r, echo=T, warning=FALSE, message=FALSE}
+
+df2 <- df %>%
+  select(`Variável`,
+        "Ano" = `Ano`,
+        "CNAE" = `Classificação Nacional de Atividades Econômicas (CNAE 2.0)`,
+        "Pessoal_ocupado" = `Faixas de pessoal ocupado`,
+        "Fundacao" = `Ano de fundação`,
+        "Valor" = `Valor`) %>%
+filter(Pessoal_ocupado != "Total")
+
+```
+
+```{r, echo=T, warning=FALSE, message=FALSE}
+
+ggplot(df2, aes(x=Ano, y= Valor)) +
+geom_col(aes(fill = Pessoal_ocupado))+
+         #position = position_stack(reverse = TRUE))+
+  labs(
+    x='Ano', 
+    y='Empresas cadastradas e pessoal ocupado',
+    title='Nº de empresas e outras organizações cadastradas em Ouro Preto', 
+    subtitle = 'Fonte: IBGE - Cadastro Central de Empresas',
+    caption='')
+
+```
+
+```{r, echo=T, warning=FALSE, message=FALSE}
+
+ggplot(df2, aes(x=Ano, y= Valor)) +
+geom_col(aes(fill = CNAE))+
+  theme(legend.position = "right",
+  legend.key.size = unit(0.2, "cm"),
+  legend.title = element_blank())+
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  labs(
+    x='Ano', 
+    y='Empresas cadastradas',
+    title='Nº de empresas e outras organizações por atividade (CNAE 2.0)', 
+    subtitle = 'Fonte:IBGE-Cadastro Central de Empresas',
+    caption='')
+
+```
+
+```{r, echo=T, warning=FALSE, message=FALSE} 
+
+ggplot(df2, aes(x=Pessoal_ocupado, y=Valor )) +
+geom_col(aes(fill = CNAE))+
+  theme(legend.position = "right",
+  legend.key.size = unit(0.2, "cm"),
+  legend.title = element_blank())+
+  theme(axis.text.x=element_text(angle=45, hjust=1, vjust=1))+
+  labs(
+    x='Número de funcionários', 
+    y='Empresas cadastradas',
+    title='Nº de empresas e outras organizações por atividade economica X pessoal 
+(2010-2019)', 
+    subtitle = 'Fonte:IBGE-Cadastro Central de Empresas',
+    caption='')
+
+```
+
+```{r,echo=T, warning=FALSE, message=FALSE}
+
+ggplot(df2, aes(x=Fundacao, y=Valor,)) +
+geom_col(aes(fill=Pessoal_ocupado))+
+  theme(legend.position = "top",
+  legend.key.size = unit(0.2, "cm"),
+  legend.title = element_blank())+
+  theme(axis.text.x=element_text(angle=80, hjust=1, vjust=1))+
+  labs(
+    x='Ano de fundação', 
+    y='',
+    title='Nº de empresas e outras organizações fundadas por ano e 
+pessoal ocupado', 
+    subtitle = 'Ouro Preto',
+    caption='')
+
+```
